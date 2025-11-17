@@ -24,5 +24,8 @@ features:
   - title: Working with Terraform
     details: Incrementally creating a base system
     link: /chapters/13-incrementally-creating-a-base-system.md
+  - title: Cloud-init
+    details: Automatic Nginx installation
+    link: /chapters/14-cloud-init.md
 ---
 
