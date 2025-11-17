@@ -1,26 +1,33 @@
-terraform {
-  required_providers {
-    hcloud = {
-      source = "hetznercloud/hcloud"
-    }
-  }
-  required_version = ">= 0.13"
-}
-
-# Configure the Hetzner Cloud API token
-provider "hcloud" {
-  token = var.hcloud_token
-}
-
-variable "hcloud_token" {
-  description = "Hetzner Cloud API token (can be supplied via environment variable TF_VAR_hcloud_token)"
-  type        = string
-  sensitive   = true
-}
-
-# Create a server
 resource "hcloud_server" "helloServer" {
   name         = "hello"
   image        =  "debian-13"
   server_type  =  "cx23"
+  firewall_ids = [hcloud_firewall.httpFw.id]
+  ssh_keys     = [hcloud_ssh_key.loginUser.id]
+  user_data    = file("init.sh")
+}
+
+resource "hcloud_firewall" "sshFw" {
+  name = "firewall-1"
+  rule {
+    direction = "in"
+    protocol  = "tcp"
+    port      = "22"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+resource "hcloud_firewall" "httpFw" {
+  name = "firewall-2"
+  rule {
+    direction = "in"
+    protocol  = "tcp"
+    port      = "80"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+resource "hcloud_ssh_key" "loginUser" {
+  name       = "my_ssh_key"
+  public_key = var.ssh_login_public_key
 }
