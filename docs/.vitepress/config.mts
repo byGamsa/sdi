@@ -26,6 +26,13 @@ export default defineConfig({
           { text: "Using SSH", link: "/chapters/02-using-ssh" },
         ],
       },
+      {
+        text: "Terraform",
+        collapsed: false,
+        items: [
+          { text: "Working with Terraform", link: "/chapters/13-incrementally-creating-a-base-system" },
+        ],
+      },
     ],
 
     socialLinks: [

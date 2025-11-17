@@ -21,5 +21,8 @@ features:
   - title: SSH & Access
     details: Configure secure remote access to your servers
     link: /knowledge/ssh
+  - title: Working with Terraform
+    details: Incrementally creating a base system
+    link: /chapters/13-incrementally-creating-a-base-system.md
 ---
 
