@@ -32,6 +32,7 @@ export default defineConfig({
         items: [
           { text: "Working with Terraform", link: "/chapters/13-incrementally-creating-a-base-system" },
           { text: "Cloud-init", link: "/chapters/14-cloud-init" },
+          { text: "Working on Cloud-init", link: "/chapters/15-working-on-cloud-init" },
         ],
       },
     ],
