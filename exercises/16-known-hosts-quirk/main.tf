@@ -1,3 +1,7 @@
+resource "tls_private_key" "host_key" { 
+  algorithm = "ED25519"
+}
+
 resource "hcloud_server" "helloServer" {
   name         = "hello"
   image        =  "debian-13"
@@ -11,7 +15,9 @@ resource "local_file" "user_data" {
   content = templatefile("tpl/userData.yml", {
     loginUser = var.loginUser
     sshKey    = chomp(file("~/.ssh/id_ed25519.pub"))
+    tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh)
   })
+  
   filename = "gen/userData.yml"
 }
 
@@ -29,23 +35,19 @@ resource "hcloud_firewall" "fw" {
     port      = "80"
     source_ips = ["0.0.0.0/0", "::/0"]
   }
-} 
-
-resource "tls_private_key" "host" { 
-  algorithm = "ED25519"
 }
 
 resource "hcloud_ssh_key" "loginUser" {
-  name       = "my_ssh_key"
+  name       = "my_ssh_key_joel"
   public_key = var.ssh_login_public_key
 }
 
 resource "local_file" "known_hosts" { 
   content = join(" "
     ,[ hcloud_server.helloServer.ipv4_address
-    , tls_private_key.host.public_key_openssh ]
+    , tls_private_key.host_key.public_key_openssh ]
   )
-  filename        = "gen/known_hosts_for_server"
+  filename        = "gen/known_hosts"
   file_permission = "644"
 }
 
