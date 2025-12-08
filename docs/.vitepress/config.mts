@@ -33,6 +33,7 @@ export default defineConfig({
           { text: "Working with Terraform", link: "/chapters/13-incrementally-creating-a-base-system" },
           { text: "Cloud-init", link: "/chapters/14-cloud-init" },
           { text: "Working on Cloud-init", link: "/chapters/15-working-on-cloud-init" },
+          { text: "Known hosts quirk", link: "/chapters/16-solving-the-known-hosts-quirk" },
         ],
       },
     ],
