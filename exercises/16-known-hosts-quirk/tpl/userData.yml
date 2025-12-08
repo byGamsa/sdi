@@ -1,15 +1,22 @@
 #cloud-config
-
 package_update: true
 package_upgrade: true
 
-# Nginx installieren und starten
 packages:
   - nginx
 
-ssh_pwauth: false           # Passwort-Login deaktivieren
-disable_root: true          # Root-Login deaktivieren
+ssh_pwauth: false
+disable_root: true
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
+    
+ssh_pwauth: false
+
 runcmd:
+  # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
+  - systemctl restart ssh
   - systemctl start nginx
   - systemctl enable nginx
 
@@ -20,6 +27,3 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - ${sshKey}
-
-package_update: true
-package_upgrade: true
