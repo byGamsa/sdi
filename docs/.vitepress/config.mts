@@ -34,6 +34,8 @@ export default defineConfig({
           { text: "Cloud-init", link: "/chapters/14-cloud-init" },
           { text: "Working on Cloud-init", link: "/chapters/15-working-on-cloud-init" },
           { text: "Known hosts quirk", link: "/chapters/16-solving-the-known-hosts-quirk" },
+          { text: "Generating host meta data", link: "/chapters/17-generating-host-meta-data" },
+          { text: "A module for ssh host key handling", link: "/chapters/18-a-module-for-ssh-host-key-handling" },
         ],
       },
     ],

@@ -1,0 +1,26 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+
+# Nginx installieren und starten
+packages:
+  - nginx
+
+runcmd:
+  - systemctl start nginx
+  - systemctl enable nginx
+
+ssh_pwauth: false           # Passwort-Login deaktivieren
+disable_root: true          # Root-Login deaktivieren
+
+users:
+  - name: ${loginUser}
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${sshKey}
+
+package_update: true
+package_upgrade: true
