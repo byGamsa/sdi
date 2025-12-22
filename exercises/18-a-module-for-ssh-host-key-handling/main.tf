@@ -1,3 +1,7 @@
+resource "tls_private_key" "host_key" {
+  algorithm = "ED25519"
+}
+
 resource "hcloud_server" "debian_server" {
   name         = "debian-server"
   image        =  "debian-13"
@@ -9,8 +13,9 @@ resource "hcloud_server" "debian_server" {
 
 resource "local_file" "user_data" {
   content = templatefile("tpl/userData.yml", {
-    loginUser = "devops"
+    loginUser = var.loginUser
     sshKey    = chomp(file("~/.ssh/id_ed25519.pub"))
+    tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh)
   })
   filename = "gen/userData.yml"
 }
@@ -42,4 +47,12 @@ module "host_metadata" {
   location    = hcloud_server.debian_server.location
   ipv4Address = hcloud_server.debian_server.ipv4_address
   ipv6Address = hcloud_server.debian_server.ipv6_address
+}
+
+module "ssh-known-hosts" {
+  source = "../modules/ssh-known-hosts"
+  public_key = tls_private_key.host_key.public_key_openssh
+  ipv4Address = hcloud_server.debian_server.ipv4_address
+  hostname = hcloud_server.debian_server.name
+  login_user = var.loginUser
 }

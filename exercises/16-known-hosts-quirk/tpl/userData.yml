@@ -11,8 +11,6 @@ disable_root: true
 ssh_keys:
   ed25519_private: |
     ${tls_private_key}
-    
-ssh_pwauth: false
 
 runcmd:
   # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird

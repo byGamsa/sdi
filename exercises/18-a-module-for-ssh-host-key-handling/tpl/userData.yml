@@ -1,5 +1,4 @@
 #cloud-config
-
 package_update: true
 package_upgrade: true
 
@@ -13,6 +12,10 @@ runcmd:
 
 ssh_pwauth: false           # Passwort-Login deaktivieren
 disable_root: true          # Root-Login deaktivieren
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
 
 users:
   - name: ${loginUser}

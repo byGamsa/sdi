@@ -17,7 +17,6 @@ resource "local_file" "user_data" {
     sshKey    = chomp(file("~/.ssh/id_ed25519.pub"))
     tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh)
   })
-  
   filename = "gen/userData.yml"
 }
 
