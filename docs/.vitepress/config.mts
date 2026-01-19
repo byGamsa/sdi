@@ -36,6 +36,7 @@ export default defineConfig({
           { text: "Known hosts quirk", link: "/chapters/16-solving-the-known-hosts-quirk" },
           { text: "Generating host meta data", link: "/chapters/17-generating-host-meta-data" },
           { text: "A module for ssh host key handling", link: "/chapters/18-a-module-for-ssh-host-key-handling" },
+          { text: "Partitions and mounting", link: "/chapters/19-partitions-and-mounting" },
         ],
       },
     ],

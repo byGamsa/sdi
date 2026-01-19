@@ -1,0 +1,38 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+# Nginx installieren und starten
+packages:
+  - nginx
+
+runcmd:
+  - systemctl start nginx
+  - systemctl enable nginx
+  - udevadm trigger -c add -s block -p ID_VENDOR=HC --verbose -p ID_MODEL=Volume
+  - reboot
+
+ssh_pwauth: false           # Passwort-Login deaktivieren
+disable_root: true          # Root-Login deaktivieren
+
+ssh_keys:
+  ed25519_private: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtz
+    c2gtZWQyNTUxOQAAACCwT/JlilRrEs5F/HdF+1ivgelT09Y3p5WbDQ2zAlu/3gAA
+    AIjCe6ONwnujjQAAAAtzc2gtZWQyNTUxOQAAACCwT/JlilRrEs5F/HdF+1ivgelT
+    09Y3p5WbDQ2zAlu/3gAAAEC6MXG6/gANTpk3Rm7+PeeGCQEeTcdHarSWFOh93rMt
+    zrBP8mWKVGsSzkX8d0X7WK+B6VPT1jenlZsNDbMCW7/eAAAAAAECAwQF
+    -----END OPENSSH PRIVATE KEY-----
+    
+
+users:
+  - name: devops
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBt7jsDMJvvc+zBdmWMpx8xPI2ACE0AQAwmpXIDz5Sm larsgerigk@gmx.de
+
+package_update: true
+package_upgrade: true
