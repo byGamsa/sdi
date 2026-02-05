@@ -1,0 +1,32 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+# Nginx installieren und starten
+packages:
+  - nginx
+
+runcmd:
+  - systemctl start nginx
+  - systemctl enable nginx
+  - udevadm trigger -c add -s block -p ID_VENDOR=HC --verbose -p ID_MODEL=Volume
+  - mkdir -p /volume01
+  - echo "${device} /volume01 xfs defaults,nofail 0 2" >> /etc/fstab
+  - systemctl daemon-reload
+  - mount -a
+  - reboot
+
+ssh_pwauth: false           # Passwort-Login deaktivieren
+disable_root: true          # Root-Login deaktivieren
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
+
+users:
+  - name: ${loginUser}
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${sshKey}
