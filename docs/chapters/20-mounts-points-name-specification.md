@@ -1,4 +1,4 @@
-# Mount point's name specification
+# 20. Mount point's name specification
 
 Folgende Aufgabe baut auf der vorherigen Aufgabe (Aufgabe 19) auf. In dieser Aufgabe werden wir
 - Eine gemeinsame Location für Server und Volume festlegen (z. B. nbg1)
