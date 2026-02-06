@@ -1,0 +1,5 @@
+serverIp="Server IP, e.g.: 1.2.3.4"
+dnsZone="your zone, e.g.: gxy.sdi.hdm-stuttgart.cloud"
+serverName="e.g.: workhorse"
+serverAliases=["www", "mail"]
+groupName="gxy"
