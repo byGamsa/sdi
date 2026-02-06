@@ -27,8 +27,7 @@ variable "server_location" {
 }
 
 variable "dns_secret" {
-  description = "Location of the server"
+  description = "Secret für DNS"
   type        = string
   nullable    = false
-  default     = "nbg1"
 }

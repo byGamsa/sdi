@@ -50,6 +50,12 @@ resource "hcloud_firewall" "fw" {
     port      = "80"
     source_ips = ["0.0.0.0/0", "::/0"]
   }
+  rule {
+  direction = "in"
+  protocol  = "tcp"
+  port      = "443"
+  source_ips = ["0.0.0.0/0", "::/0"]
+  }
 } 
 
 resource "hcloud_ssh_key" "loginUser" {
@@ -82,13 +88,6 @@ provider "dns" {
   }
 }
 
-resource "dns_a_record_set" "server_a" {
-  name = "www.g1.sdi.hdm-stuttgart.cloud" 
-  zone = "sdi.hdm-stuttgart.cloud."      
-  ttl  = 600
-  addresses = [hcloud_server.debian_server.ipv4_address]
-}
-
 resource "null_resource" "dns_root" {
   triggers = {
     server_ip = hcloud_server.debian_server.ipv4_address
@@ -97,8 +96,16 @@ resource "null_resource" "dns_root" {
   provisioner "local-exec" {
     command = <<-EOT
       echo "server ns1.sdi.hdm-stuttgart.cloud
-      update add www.g1.sdi.hdm-stuttgart.cloud 10 A ${hcloud_server.debian_server.ipv4_address}
+      update delete g1.sdi.hdm-stuttgart.cloud. A
+      update add g1.sdi.hdm-stuttgart.cloud. 10 A ${hcloud_server.debian_server.ipv4_address}
       send" | nsupdate -y "hmac-sha512:g1.key:${var.dns_secret}"
     EOT
   }
+}
+
+resource "dns_a_record_set" "www" {
+  name = "www"
+  zone = "g1.sdi.hdm-stuttgart.cloud."      
+  ttl  = 10
+  addresses = [hcloud_server.debian_server.ipv4_address]
 }
