@@ -39,6 +39,7 @@ export default defineConfig({
           { text: "Partitions and mounting", link: "/chapters/19-partitions-and-mounting" },
           { text: "Mount point's name specification", link: "/chapters/20-mounts-points-name-specification.md" },
           { text: "Enhancing your web server", link: "/chapters/21-enhancing-your-web-server.md" },
+          { text: "Creating DNS records", link: "/chapters/22-creating-dns-records.md" },
         ],
       },
     ],
