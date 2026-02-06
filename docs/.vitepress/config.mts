@@ -40,6 +40,7 @@ export default defineConfig({
           { text: "Mount point's name specification", link: "/chapters/20-mounts-points-name-specification.md" },
           { text: "Enhancing your web server", link: "/chapters/21-enhancing-your-web-server.md" },
           { text: "Creating DNS records", link: "/chapters/22-creating-dns-records.md" },
+          { text: "Creating a host with corresponding DNS entries", link: "/chapters/23-creating-host-with-corresponding-dns-entries.md" },
         ],
       },
     ],
