@@ -1,4 +1,4 @@
-# Creating a host with corresponding DNS entries
+# 23. Creating a host with corresponding DNS entries
 
 Diese Aufgabe baut auf dem bestehenden Code der Aufgabe 16 (Solving the known host quirk) und der Aufgabe 22 (Creating DNS records) auf.
 

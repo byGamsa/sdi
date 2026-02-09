@@ -1,0 +1,6 @@
+dnsZone="your zone, e.g.: gxy.sdi.hdm-stuttgart.cloud"
+serverName="e.g.: workhorse"
+serverAliases=["www", "mail"]
+groupName="gxy"
+loginUser="..."
+serverCount="2"

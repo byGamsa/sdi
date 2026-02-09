@@ -41,6 +41,7 @@ export default defineConfig({
           { text: "Enhancing your web server", link: "/chapters/21-enhancing-your-web-server.md" },
           { text: "Creating DNS records", link: "/chapters/22-creating-dns-records.md" },
           { text: "Creating a host with corresponding DNS entries", link: "/chapters/23-creating-host-with-corresponding-dns-entries.md" },
+          { text: "Creating a fixed number of servers", link: "/chapters/24-creating-a-fixed-number-of-servers.md" },
         ],
       },
     ],
