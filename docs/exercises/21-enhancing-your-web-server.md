@@ -137,7 +137,7 @@ resource "hcloud_firewall" "fw" {
 
 ::: info
 
-Stelle sicher dass `nsupdate` bei dir Lokal installiert ist. 
+Stelle sicher dass `nsupdate` bei dir Lokal installiert ist.
 
 Falls nicht kannst du es über `sudo apt install bind9-dnsutils` installieren.
 
