@@ -83,7 +83,7 @@ resource "hcloud_firewall" "fw" {
 }
 
 resource "hcloud_ssh_key" "loginUser" {
-  name       = "my_ssh_key_joel"
+  name       = "my_ssh_key"
   public_key = var.ssh_login_public_key
 }
 
