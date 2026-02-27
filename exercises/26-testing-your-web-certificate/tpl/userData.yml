@@ -1,0 +1,27 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+
+ssh_pwauth: false
+disable_root: true
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
+
+runcmd:
+  # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
+  - systemctl restart ssh
+  - systemctl start nginx
+  - systemctl enable nginx
+
+users:
+  - name: ${loginUser}
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${sshKey}
