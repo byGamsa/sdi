@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "SDI Exercises",
   description: "Documentation for the exercises in the lecture 113475 Software defined Infrastructure",
+  base: '/sdi/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
