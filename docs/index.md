@@ -47,7 +47,7 @@ Mehr Details findest du in der [README](https://github.com/byGamsa/sdi#readme).
 
 ::: info
 Diese Dokumentation wurde mit Unterstützung von KI-Tools (Large Language Models) erstellt.
+
 - Sämtliche Übungen, Konzepte und Code-Implementierungen wurden eigenständig auf Basis der [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/apf.html) und der dort genannten Quellen erarbeitet.
 - KI wurde ausschließlich zur Optimierung der Texte, für Correctness-Checking / Debugging sowie zur Klärung von Hintergrundfragen verwendet.
-:::
-
+  :::
