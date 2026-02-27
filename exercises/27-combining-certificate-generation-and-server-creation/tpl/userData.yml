@@ -1,0 +1,55 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+
+ssh_pwauth: false
+disable_root: true
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
+packages:
+  - nginx
+
+write_files:
+  - path: /etc/ssl/certs/certificate.pem
+    content: |
+      ${certificate_pem}
+    permissions: "0644"
+
+  - path: /etc/ssl/private/private.key
+    content: |
+      ${private_key_pem}
+    permissions: "0600"
+
+  - path: /etc/nginx/sites-available/default
+    content: |
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          listen 443 ssl default_server;
+          listen [::]:443 ssl default_server;
+                    
+          ssl_certificate /etc/ssl/certs/certificate.pem;
+          ssl_certificate_key /etc/ssl/private/private.key;
+          
+          root /var/www/html;
+          index index.html index.htm index.nginx-debian.html;
+      }
+
+runcmd:
+  # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
+  - systemctl restart ssh
+  - systemctl enable nginx
+  - systemctl restart nginx
+
+users:
+  - name: ${loginUser}
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${sshKey}
