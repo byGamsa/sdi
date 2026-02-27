@@ -1,8 +1,31 @@
-# 21. Enhancing your web server.
-Diese Aufgabe baut auf der vorherigen Aufgabe 20 auf.
+# 21. Webserver mit DNS und TLS erweitern
 
-- Zuerst muss der Key aus dem gegebenen File in Moodle geholt werden
-- Anschließend muss Variable exportiert werden und es kann geschaut werden, ob die Subdomain existiert und aktiv ist
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#_qanda)
+
+In dieser Übung wird der bestehende Webserver um DNS-Einträge und TLS-Verschlüsselung (HTTPS) erweitert. Dabei werden A-Records erstellt, die sowohl die Hauptdomain als auch die `www`-Subdomain auf die Server-IP verweisen. Anschließend wird mit Let's Encrypt ein kostenloses TLS-Zertifikat eingerichtet, sodass der Webserver über HTTPS erreichbar ist.
+
+## Architektur-Komponenten
+
+| Komponente | Beschreibung |
+|---|---|
+| **DNS Provider** | Terraform-Provider für DNS-Updates über TSIG-Authentifizierung |
+| **A-Record (Root)** | Verknüpft die Hauptdomain mit der Server-IP (über `nsupdate`) |
+| **A-Record (www)** | Verknüpft die `www`-Subdomain mit der Server-IP |
+| **Firewall (Port 443)** | Erlaubt eingehenden HTTPS-Verkehr |
+| **Certbot / Let's Encrypt** | Automatische TLS-Zertifikatserstellung und Nginx-Konfiguration |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 20](/exercises/20-mounts-points-name-specification) auf.
+
+## Übungsschritte
+
+### 1. DNS-Zone überprüfen
+
+Bevor wir DNS-Records erstellen, müssen wir den HMAC-Key aus dem in Moodle bereitgestellten File holen. Dieser Schlüssel authentifiziert uns gegenüber dem Nameserver und erlaubt es uns, DNS-Einträge in unserer Zone zu verwalten.
+
+Exportiere den Schlüssel und überprüfe, ob die Zone existiert und aktiv ist:
+
 ```bash
 # Export your HMAC key as an environment variable
 export HMAC="hmac-sha512:g1.key:<YOUR_SECRET_KEY>"
@@ -11,14 +34,13 @@ export HMAC="hmac-sha512:g1.key:<YOUR_SECRET_KEY>"
 dig @ns1.hdm-stuttgart.cloud -y $HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
 
-In der Aufgabe geht es darum
-- einen A DNS Record an unsere Server-IP anzubinden (einmal mit www., einmal ohne)
-- TLS zu konfigurieren
+::: info 
+Ein AXFR-Request liefert alle DNS-Einträge einer Zone zurück. Das ist nützlich, um den aktuellen Stand zu überprüfen und sicherzustellen, dass keine Konflikte mit bestehenden Einträgen bestehen.
+:::
 
-### Anbinden eines A DNS Records an unsere Server-IP
+### 2. DNS Provider konfigurieren
 
-#### Provider-Setup 
-Hier wird die Verbindung zum Nameserver ``ns1.sdi.hdm-stuttgart.cloud`` in der ``main.tf`` konfiguriert. Zur Authentifizierung wird der TSIG-Key (``g1.key``) und das zugehörige Secret verwendet, um Schreibrechte auf der DNS-Zone zu erhalten.
+Konfiguriere den hashicorp/dns Provider in der `main.tf`. Die Verbindung zum Nameserver `ns1.sdi.hdm-stuttgart.cloud` wird über TSIG-Authentifizierung (HMAC-SHA512) hergestellt:
 
 ::: code-group
 ```hcl[main.tf]
@@ -33,8 +55,14 @@ provider "dns" {  // [!code ++:8]
 ```
 :::
 
-#### Hauptdomain setzen
-Da der Anbieter hashicorp/dns keine Root-Zone-Einträge erlaubt, brauchen wir hierfür einen manuellen Ansatz. Der Block ``triggers`` überwacht die Server-IP. Ändert sich diese, führt Terraform das Skript erneut aus. Über den ``local-exec`` Provisioner wird das Tool ``nsupdate`` aufgerufen. Es sendet direkt Befehle an den Nameserver, um zuerst eventuell vorhandene Einträge für die Domain zu löschen und anschließend die neue IP-Adresse sauber einzutragen.
+::: warning 
+Der `key_name` muss mit einem Punkt enden (`g1.key.`). Das ist DNS-Standard für vollqualifizierte Domainnamen (FQDN).
+:::
+
+### 3. Hauptdomain setzen (Root-Zone)
+
+Da der hashicorp/dns Provider keine Root-Zone-Einträge direkt unterstützt, verwenden wir einen alternativen Ansatz. Der Block `triggers` überwacht die Server-IP, ändert sich diese, führt Terraform das Script erneut aus. Über den `local-exec` Provisioner wird das Tool `nsupdate` aufgerufen, das direkt Befehle an den Nameserver sendet:
+
 ::: code-group
 ```hcl [main.tf]
 resource "null_resource" "dns_root" { // [!code ++:15]
@@ -53,8 +81,13 @@ resource "null_resource" "dns_root" { // [!code ++:15]
 }
 ```
 :::
-#### Setzen der Subdomain (www)
-Für klassische Subdomains funktioniert der Terraform-Provider problemlos, daher wählen wir hier die native Terraform-Ressource. Diese erstellt automatisch einen A-Record in der Zone ``g1.sdi.hdm-stuttgart.cloud``, der ebenfalls auf die IP-Adresse des Debian-Servers verweist.
+
+Das Script löscht zunächst eventuelle alte A-Records für die Domain und setzt dann einen neuen Eintrag mit der aktuellen Server-IP.
+
+### 4. Subdomain (www) setzen
+
+Für klassische Subdomains funktioniert der Terraform-Provider problemlos. Hier erstellen wir einen A-Record für `www`, der ebenfalls auf die IP des Servers verweist:
+
 ::: code-group
 ```hcl [main.tf]
 resource "dns_a_record_set" "www" { // [!code ++:6]
@@ -65,8 +98,11 @@ resource "dns_a_record_set" "www" { // [!code ++:6]
 }
 ```
 :::
-#### TLS Konfiguration
-Zu Beginn muss die Firewall um Port 443 erweitert werden 
+
+### 5. TLS konfigurieren
+
+Für HTTPS muss zuerst die Firewall um Port 443 erweitert werden:
+
 ::: code-group
 ```hcl [main.tf]
 resource "hcloud_firewall" "fw" {
@@ -93,17 +129,20 @@ resource "hcloud_firewall" "fw" {
 ```
 :::
 
-Anschließend muss auf den Server zugegriffen werden und letsecrypt muss installiert werden.
+Anschließend muss auf den Server zugegriffen und Certbot (der Let's Encrypt Client) samt dem Nginx-Plugin installiert werden:
+
 ```bash
 sudo apt install certbot python3-certbot-nginx
 ```
 
-Sobald die Installation erfolgreich war, kann folgender Code ausgeführt werden:
+Sobald die Installation erfolgreich war, kann das Zertifikat angefordert werden. Certbot konfiguriert Nginx automatisch für HTTPS:
+
 ```bash
 sudo certbot --nginx -d g1.sdi.hdm-stuttgart.cloud -d www.g1.sdi.hdm-stuttgart.cloud
 ```
 
 Sollte alles geklappt haben, sollte der Output so aussehen:
+
 ```
 Deploying certificate
 Successfully deployed certificate for g1.sdi.hdm-stuttgart.cloud to /etc/nginx/sites-enabled/default
@@ -111,8 +150,15 @@ Successfully deployed certificate for www.g1.sdi.hdm-stuttgart.cloud to /etc/ngi
 Congratulations! You have successfully enabled HTTPS on https://g1.sdi.hdm-stuttgart.cloud and https://www.g1.sdi.hdm-stuttgart.cloud
 ```
 
-Anschließend muss noch getestet werden, ob alles erfolgreich geklappt hat. Dies kann direkt über den Browser getestet werden, oder durch folgenden Befehl im Terminal:
+### 6. Ergebnis überprüfen
+
+Anschließend kann getestet werden, ob alles erfolgreich geklappt hat. Dies kann direkt über den Browser oder per Terminal verifiziert werden:
+
 ```bash
 curl -I https://g1.sdi.hdm-stuttgart.cloud
 curl -I https://www.g1.sdi.hdm-stuttgart.cloud
 ```
+
+::: tip
+Wenn du einen HTTP 200 Status-Code mit `Content-Type: text/html` siehst, ist der Webserver über HTTPS erreichbar und das TLS-Zertifikat ist aktiv.
+:::

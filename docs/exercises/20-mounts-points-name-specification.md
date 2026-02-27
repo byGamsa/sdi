@@ -1,14 +1,27 @@
-# 20. Mount point's name specification
+# 20. Eigenen Mount-Point definieren
 
-Folgende Aufgabe baut auf der vorherigen Aufgabe (Aufgabe 19) auf. In dieser Aufgabe werden wir
-- Eine gemeinsame Location für Server und Volume festlegen (z. B. nbg1)
-- Server und Volume unabhängig erstellen
-- Volume nicht automatisch mounten (automount = false)
-- Volume in /etc/fstab eintragen
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_volume.html#sdi_cloudProvider_volume_qanda_mountPointName)
 
-### Location wird als Variable erstellt und eingefügt
-Die Variable stellt sicher, dass Server und Volume am gleichen Standort erstellt werden.
-Anschließend wird die location zu dem Server und dem Volume hinzugefügt.
+In dieser Übung wird das Volume-Mounting weiter automatisiert und verbessert. Server und Volume werden unabhängig voneinander erstellt und über eine `hcloud_volume_attachment` Ressource verbunden. Anstelle des automatischen Mountings durch Hetzner übernimmt Cloud-Init die Einrichtung: Es erstellt den Mount-Punkt, trägt das Volume in `/etc/fstab` ein und sorgt dafür, dass alles sofort und nach jedem Neustart verfügbar ist.
+
+## Architektur-Komponenten
+
+| Komponente | Beschreibung |
+|---|---|
+| **Location Variable** | Stellt sicher, dass Server und Volume am gleichen Standort (z.B. `nbg1`) erstellt werden |
+| **Volume Attachment** | Entkoppelte Verbindung von Volume und Server (ohne Automount) |
+| **Cloud-Init Template** | Automatisiert das Erstellen des Mount-Punkts und den fstab-Eintrag |
+| **fstab Automation** | Persistentes Mounting über Cloud-Init statt manueller Konfiguration |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 19](/exercises/19-partitions-and-mounting) auf. Die dort manuell durchgeführten Schritte werden hier automatisiert.
+
+## Übungsschritte
+
+### 1. Server-Location als Variable definieren
+
+Server und Volume müssen im gleichen Hetzner-Rechenzentrum liegen, damit sie miteinander verbunden werden können. Über eine gemeinsame Variable stellen wir das sicher:
 
 ::: code-group
 ```hcl [variable.tf]
@@ -40,8 +53,16 @@ resource "hcloud_volume" "volume01" {
 ```
 :::
 
-### Server und Volume werden unabhängig voneinander erstellen und automount abschalten
-`automount = false` stellt sicher, dass Cloud-init den Mountpunkt selbst erstellt
+::: info
+Gängige Locations bei Hetzner sind `nbg1` (Nürnberg), `fsn1` (Falkenstein) und `hel1` (Helsinki). Server und Volumes in unterschiedlichen Locations können nicht verbunden werden.
+:::
+
+### 2. Server und Volume entkoppeln
+
+Im vorherigen Schritt war das Volume direkt an den Server gebunden (`server_id` im Volume). Jetzt entkoppeln wir beides und verwenden eine separate `hcloud_volume_attachment` Ressource.
+
+Außerdem deaktivieren wir `automount`, damit Cloud-Init den Mountpunkt selbst konfiguriert:
+
 ::: code-group
 ```hcl [main.tf]
 resource "hcloud_volume" "volume01" {
@@ -60,9 +81,14 @@ resource "hcloud_volume_attachment" "volume_attachment" {
 ```
 :::
 
-### Volume in `/etc/fstab` eintragen
-Mountpoint `/volume01` wird erstellt und in `/etc/fstab` eingetragen
-`daemon-reload` und `mount -a` sorgen dafür, dass der Mount sofort aktiv und reboot-sicher ist
+::: info
+Durch die Entkopplung kann das Volume den Server überleben. Wenn du den Server zerstörst und neu erstellst, bleibt das Volume mit seinen Daten erhalten und kann an den neuen Server angehängt werden.
+:::
+
+### 3. Volume in fstab per Cloud-Init eintragen
+
+Jetzt automatisieren wir den gesamten Mount-Prozess über Cloud-Init. Dafür übergeben wir den Volume-Namen und den Device-Pfad als Variablen an das Template. Cloud-Init erstellt dann den Mountpunkt `/volume01`, trägt ihn in `/etc/fstab` ein und führt `mount -a` aus:
+
 ::: code-group
 ```hcl [main.tf]
 resource "local_file" "user_data" {
@@ -86,4 +112,4 @@ runcmd:
   - mount -a // [!code ++]
   - reboot
 ```
-:::
+::: 

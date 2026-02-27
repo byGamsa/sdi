@@ -1,28 +1,56 @@
-# 13. Incrementally creating a base system
+# 13. Schrittweise ein Basissystem aufbauen
 
-## 1. Install Terraform
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_terra.html#sdi_cloudProvider_terra_qandaBasicSystem)
 
-Before you begin, you need to install Terraform. Follow the official installation guide for your operating system on the [Terraform website](https://developer.hashicorp.com/terraform/downloads).
+In dieser Übung wird eine grundlegende Cloud-Infrastruktur mit Terraform auf Hetzner Cloud aufgebaut. Ausgehend von einem einzelnen minimalen Server wird die Konfiguration schrittweise um Sicherheitsfeatures wie Firewalls und SSH-Keys erweitert, bis ein produktionsnahes Setup entsteht.
 
-## 2. Get a Hetzner Cloud API Token
+## Architektur-Komponenten
 
-To allow Terraform to interact with your Hetzner Cloud account, you need to generate an API token.
+| Komponente | Beschreibung |
+|---|---|
+| **Terraform Konfiguration** | Definiert die gesamte Infrastruktur als Code |
+| **Hetzner Cloud Provider** | Stellt Server-Ressourcen in der Cloud bereit |
+| **Firewall** | Kontrolliert eingehenden Netzwerkverkehr (Port 22 für SSH) |
+| **SSH Key Management** | Ermöglicht sicheren, passwortlosen Zugriff auf den Server |
 
-1. Go to the [Hetzner Cloud Console](https://console.hetzner.cloud/) and log in.
-2. Select your project.
-3. Navigate to "Security" -> "API Tokens".
-4. Click "Generate API Token".
-5. Enter a descriptive name for the token and click "Generate API Token".
-6. Copy the generated token's value immediately. This token is only shown once and cannot be retrieved later. Store it securely, for example, in a password manager.
+## Codebasis
 
+Diese Übung ist der **Ausgangspunkt** des Kurses und baut auf keiner vorherigen Aufgabe auf. Hier wird das Terraform-Projekt von Grund auf erstellt.
 
-## 3. We create a minimal Terraform configuration:
-::: info
-This basic configuration will create a minimal server without security features. You'll enhance it in later sections.
+## Übungsschritte
+
+### 1. Terraform installieren
+
+Bevor wir beginnen, muss Terraform auf dem lokalen Rechner installiert werden.
+Folge der offiziellen Installationsanleitung für dein Betriebssystem auf der [Terraform Website](https://developer.hashicorp.com/terraform/downloads).
+
+::: tip
+Nach der Installation kannst du die korrekte Einrichtung mit `terraform version` überprüfen.
 :::
-<details>
-<summary>show file </summary>
 
+### 2. Hetzner Cloud API Token erstellen
+
+Um Terraform mit deinem Hetzner Cloud Account zu verbinden, wird ein API Token benötigt. Dieser Token erlaubt es Terraform, Ressourcen in deinem Hetzner Cloud Projekt zu erstellen, zu ändern und zu löschen.
+
+1. Gehe zur [Hetzner Cloud Console](https://console.hetzner.cloud/) und melde dich an.
+2. Wähle dein Projekt aus.
+3. Navigiere zu **„Security"** → **„API Tokens"**.
+4. Klicke auf **„Generate API Token"**.
+5. Vergib einen aussagekräftigen Namen und klicke auf **„Generate API Token"**.
+6. Kopiere den generierten Token sofort. Er wird nur einmal angezeigt und kann nicht erneut abgerufen werden.
+
+::: warning Sicherheitshinweis
+Der Token gewährt vollen Zugriff auf dein Hetzner Cloud Projekt. Speichere ihn sicher, z.B. in einem Passwort-Manager, und teile ihn niemals öffentlich (z.B. in Git-Repositories).
+:::
+
+### 3. Minimale Terraform-Konfiguration erstellen
+
+Zuerst erstellen wir eine einfache `main.tf` Datei, die einen einzelnen Debian-Server bei Hetzner Cloud erzeugt. Diese Konfiguration enthält den Provider-Block (welcher Cloud-Anbieter verwendet wird) und einen Ressourcen-Block (was erstellt werden soll).
+
+::: info
+Diese Basiskonfiguration erstellt einen minimalen Server ohne Sicherheitsfeatures. Der API Token steht hier noch direkt im Code, wird aber im nächsten Schritt verbessert.
+:::
+ 
 ::: code-group
 
 ```hcl [main.tf]
@@ -47,11 +75,14 @@ resource "hcloud_server" "helloServer" {
 }
 ```
 
-:::
-</details>
+::: 
 
-## 4. Outsource the API Key in another file
-- Create a new file named variables.tf in the same directory:
+### 4. API Key in eine separate Datei auslagern
+
+In der bisherigen Konfiguration steht der API Token direkt im Code. Das ist ein Sicherheitsrisiko, insbesondere wenn der Code in einem Git-Repository versioniert wird. Deshalb lagern wir den Token in separate Dateien aus und nutzen Terraform-Variablen.
+
+Erstelle zuerst eine `variables.tf` Datei, die die Variable deklariert:
+
 ::: code-group
 ```hcl [variables.tf]
 variable "hcloud_token" {
@@ -64,7 +95,8 @@ variable "hcloud_token" {
 ```
 :::
 
-- Create a new file named provider.tf in the same directory:
+Erstelle dann eine `provider.tf` Datei, die den Provider so konfiguriert, dass er die Variable verwendet:
+
 ::: code-group
 ```hcl [provider.tf]
 provider "hcloud" {
@@ -81,15 +113,25 @@ terraform {
 }
 ```
 :::
-- Create a file named secret.auto.tfvars in the same directory:
+
+Erstelle abschließend eine `secret.auto.tfvars` Datei, die den tatsächlichen Token-Wert enthält. Dateien mit der Endung `.auto.tfvars` werden von Terraform automatisch geladen:
+
 ::: code-group
 ```hcl [secret.auto.tfvars]
 hcloud_token="YOUR_API_TOKEN"
 ```
 :::
 
-## 5. Add a Firewall
-- Add the following code block into the main.tf and add the firewall id into the hcloud_server code block:
+::: warning Sicherheitshinweis
+Die Datei `secret.auto.tfvars` enthält sensible Daten und sollte unbedingt in die `.gitignore` eingetragen werden, damit sie nicht ins Repository committed wird.
+:::
+
+### 5. Firewall hinzufügen
+
+Ohne Firewall ist der Server über alle Ports aus dem Internet erreichbar. Wir erstellen eine Firewall-Ressource, die nur eingehenden SSH-Verkehr (Port 22) erlaubt, und referenzieren sie in der Server-Ressource.
+
+Füge folgende Blöcke in die `main.tf` ein:
+
 ::: code-group
 ```hcl [main.tf]
 resource "hcloud_server" "helloServer" {
@@ -111,8 +153,13 @@ resource "hcloud_firewall" "sshFw" { // [!code ++]
 ```
 :::
 
-## Adding SSH-keys
-- Create a second variable in variable.tf
+
+### 6. SSH-Keys hinzufügen
+
+Anstelle von passwortbasiertem Login verwenden wir SSH-Keys für eine sichere Authentifizierung. Dafür wird eine neue Variable für den öffentlichen SSH-Schlüssel angelegt und eine `hcloud_ssh_key` Ressource erstellt.
+
+Erstelle eine zweite Variable in `variable.tf`:
+
 ::: code-group
 ```hcl [variable.tf]
 variable "hcloud_token" {
@@ -130,14 +177,18 @@ variable "ssh_login_public_key" { // [!code ++]
 } // [!code ++]
 ```
 :::
-- Set the new variable in secrets.auto.tfvars
+
+Setze den Wert der Variable in der Secrets-Datei:
+
 ::: code-group
 ```hcl [secrets.auto.tfvars]
 hcloud_token="YOUR_API_TOKEN"
 ssh_login_public_key="YOUR_PUBLIC_SSK_KEY" // [!code ++]
 ```
 :::
-- Add a resource block for every ssh-key you want to add to main.tf and add the loginUser-key-id into the hcloud_server code block:
+
+Füge eine SSH-Key-Ressource hinzu und referenziere sie im Server-Block. Dadurch wird der öffentliche Schlüssel automatisch auf dem Server hinterlegt:
+
 ::: code-group
 ```hcl [main.tf]
 resource "hcloud_server" "helloServer" {
@@ -165,8 +216,12 @@ resource "hcloud_ssh_key" "loginUser" { // [!code ++]
 ```
 :::
 
-## Terraform output
-- Create a new file output.tf in the same directory
+### 7. Terraform Output definieren
+
+Outputs sind ein nützliches Feature von Terraform, um nach `terraform apply` wichtige Informationen über die erstellten Ressourcen anzuzeigen. In unserem Fall wollen wir die IP-Adresse und das Datacenter des Servers sehen, damit wir uns direkt per SSH verbinden können.
+
+Erstelle eine neue Datei `output.tf`:
+
 ::: code-group
 ```hcl [output.tf]
 output "ip_addr" {
@@ -181,4 +236,4 @@ output "datacenter" {
 ```
 :::
 
-- Now you get the correct output after running "terraform apply"
+Nach `terraform apply` werden die Server-IP und das Datacenter direkt im Terminal ausgegeben. 

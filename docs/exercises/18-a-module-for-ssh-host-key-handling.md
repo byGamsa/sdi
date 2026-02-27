@@ -1,24 +1,27 @@
-# 18. A module for ssh host key handling
-Diese Aufgabe erweitert das bestehende Infrastruktur-Setup um ein neues wiederverwendbares Modul SshKnownHosts, welches SSH‑ und SCP‑Wrapper‑Skripte generiert.
+# 18. Modul für SSH Host Key Handling
 
-## Solution Overview
-...
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleFileGen)
 
-## Architecture
-### Components
+In dieser Übung wird die SSH-Host-Key-Logik aus [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) in ein wiederverwendbares Terraform-Modul `SshKnownHosts` ausgelagert. Das Modul generiert die SSH- und SCP-Wrapper-Skripte sowie die `known_hosts`-Datei automatisch. 
 
-1. Terraform Configuration - Defines the infrastructure
-2. Cloud-Init Template - Configures the server after boot
-3. Firewall Rules - Secures the server
-4. SSH Key Management - Enables secure access
+## Architektur-Komponenten
 
-## Implementation
+| Komponente | Beschreibung |
+|---|---|
+| **Terraform Modul `ssh-known-hosts`** | Wiederverwendbares Submodul für SSH-Verbindungsmanagement |
+| **Template-Dateien** | `ssh.sh` und `scp.sh` Wrapper-Skripte als Templates |
+| **`locals` Block** | Entscheidet automatisch, ob Hostname oder IP verwendet wird |
+| **Modul-Einbindung** | Das Hauptprojekt übergibt den Public Key und die Server-Adresse |
 
-Für folgende Aufgabe verwenden wir die Codebasis welche in Aufgabe 17 bereits aufgesetzt wurde
+## Codebasis
 
-### 1. Submodul für SSH Host Key Handling erstellen
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 17](/exercises/17-generating-host-meta-data) auf. Die Modulstruktur mit dem `modules` Ordner wurde dort bereits eingeführt.
 
-Wie in der letzten Aufgabe verwenden wir erneut den `modules` Ordner, in welchem wir das neue Modul SshKnownHosts erstellen. Dieses ist wie folgt aufgebaut
+## Übungsschritte
+
+### 1. Modulstruktur erstellen
+
+Wie in der letzten Aufgabe verwenden wir erneut den `modules` Ordner, in welchem wir das neue Modul `ssh-known-hosts` erstellen. Die Struktur enthält die Modul-Logik und die Template-Dateien:
 
 ```sh
 .
@@ -37,11 +40,9 @@ Wie in der letzten Aufgabe verwenden wir erneut den `modules` Ordner, in welchem
             └── ssh.sh
 ```
 
-Im nächsten Schritt befüllen wir die neu erstellten Dateien im Modul `ssh-known-hosts`
+### 2. Modul-Templates erstellen
 
-### 2. Creating the Module Templates
-
-Das Modul verwendet die in Aufgabe 16 erstellten ssh und scp Wrapper-Skripte. Die Platzhalter werden durch templatefile() ersetzt.
+Das Modul verwendet die aus Aufgabe 16 bekannten SSH- und SCP-Wrapper-Skripte. Die Platzhalter `${user}` und `${host}` werden durch `templatefile()` mit den tatsächlichen Werten ersetzt, wenn das Modul aufgerufen wird:
 
 ::: code-group
 
@@ -67,11 +68,11 @@ ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${user}@${ip} "$@"
 
 :::
 
-### 3. Implementiere das restliche Modul
+### 3. Modul implementieren
 
-3.1 variables.tf
+#### 3.1 Variablen (`variables.tf`)
 
-Definiere die Eingangsvariablen, die das Modul benötigt
+Definiere die Eingangsvariablen des Moduls. 
 
 ```hcl
 variable "login_user" {
@@ -102,9 +103,9 @@ variable "hostname" {
 }
 ```
 
-3.2 main.tf 
+#### 3.2 Hauptdatei (`main.tf`)
 
-Hier werden der Server erstellt und die JSON-Datei gerendert und geschrieben.
+Der `locals` Block implementiert eine Fallback-Logik: Wenn ein Hostname angegeben ist, wird dieser verwendet. Ansonsten wird auf die IPv4-Adresse zurückgegriffen.
 
 ```hcl
 locals {
@@ -133,17 +134,17 @@ resource "local_file" "scp_script" {
 }
 ```
 
-Damit liegen nach terraform apply drei generierte Dateien im Parent-Projekt:
+Damit liegen nach `terraform apply` drei generierte Dateien im Projekt:
 
-- bin/ssh
-
-- bin/scp
-
-- gen/known_hosts
+| Datei | Beschreibung |
+|---|---|
+| `bin/ssh_<host>` | SSH-Wrapper für den spezifischen Server |
+| `bin/scp_<host>` | SCP-Wrapper für den spezifischen Server |
+| `gen/known_hosts_<host>` | Known-Hosts-Datei für den spezifischen Server |
 
 ### 4. Submodul im Parent-Projekt einbinden
 
-Nach dem Aufbau des Moduls kann es in der Terraform-Konfiguration wie folgt eingesetzt werden:
+Nach dem Aufbau des Moduls kann es in der Terraform-Konfiguration des Hauptprojekts wie folgt eingebunden werden:
 
 ```sh
 module "ssh_wrapper" { # [!code ++:7]
@@ -154,4 +155,6 @@ module "ssh_wrapper" { # [!code ++:7]
 } 
 ```
 
-Terraform generiert anschließend alle benötigten SSH-Hilfsdateien, sodass zukünftige Verbindungen automatisch den korrekten Host Key verwenden.
+::: info
+Vergiss nicht, `terraform init` nach dem Hinzufügen des Moduls auszuführen.
+:::

@@ -1,22 +1,38 @@
-# 22. Creating DNS records
+# 22. DNS-Records erstellen
 
-In dieser Aufgabe werden wir...
-- Alle Ressourcen der vorherigen Aufgaben entfernen und eine minimale Konfiguration mit einem A-record erstellen
-- Zwei Aliase hinzufügen
-- Hart-gecodete Strings entfernen und Variablen daraus erstellen
-- Validations für die Variablen erstellen.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_dns_quandaPureDns)
+
+In dieser Übung werden DNS-Records vollständig mit Terraform verwaltet. Ausgehend von einer leeren Konfiguration wird schrittweise ein komplettes DNS-Setup aufgebaut: Zuerst ein einzelner A-Record, dann CNAME-Aliase, anschließend werden hartcodierte Strings durch Variablen ersetzt, und abschließend werden Validierungsregeln hinzugefügt, die fehlerhafte Konfigurationen verhindern.
+
+## Architektur-Komponenten
+
+| Komponente | Beschreibung |
+|---|---|
+| **DNS Provider** | Terraform-Provider mit TSIG-Authentifizierung zum Nameserver |
+| **A-Record** | Verknüpft die `workhorse`-Subdomain mit einer IP-Adresse |
+| **Root A-Record** | Verknüpft die Basis-Domain mit einer IP (über `nsupdate`) |
+| **CNAME-Records** | Aliase (`www`, `mail`) für die Hauptdomain |
+| **Variablen-Validierung** | `distinct()` und `contains()` verhindern fehlerhafte Eingaben |
+
+## Codebasis
+
+Diese Übung startet von einer **neuen, leeren Konfiguration**. Alle Ressourcen der vorherigen Aufgaben sollten gelöscht sein (`terraform destroy`). Erstelle drei frische Dateien: `main.tf`, `variable.tf` und `secrets.auto.tfvars`.
 
 ### Voraussetzungen
-- Man besitzt bereits ein DNS-Secret
-- Alle Ressourcen der vorherigen Aufgabe sollten gelöscht sein. Man sollte drei neue Files erstellen, ``main.tf``, ``variable.tf`` und ``secrets.auto.tfvars``
-- Die Variable HMAC sollte exportiert sein. Sollte dies nicht passiert sein, muss das noch gemacht werden:
+
+- DNS-Secret (HMAC-Key) ist vorhanden
+- HMAC-Variable ist exportiert:
+
 ```bash
 export HMAC="g1.key:CCqK..."
 ```
 
-### Erstellung einer minimalen Konfiguration eines A-records für die Basisdomain und die ``workhouse``-Subdomain
+## Übungsschritte
 
-Hierzu sollte man zuerst die Variable dns_secret definieren und sie initialisieren
+### 1. Minimale DNS-Konfiguration erstellen
+
+Zuerst definieren wir die Variable `dns_secret` und initialisieren sie. Dieses Secret authentifiziert uns gegenüber dem Nameserver:
+
 ::: code-group
 ```hcl [variable.tf]
 variable "dns_secret" { // [!code ++:5]
@@ -30,7 +46,8 @@ dns_secret="CCqK..." // [!code ++]
 ```
 :::
 
-Anschließend sollte man eine minimale Konfiguration in der ``main.tf`` vornehmen, um dort den DNS Record für die Basisdomain und die Subdomain zu erstellen. Eine ähnliche Konfiguration wurde bereits in der letzten Aufgabe verwendet.
+Anschließend erstellen wir eine minimale DNS-Konfiguration in der `main.tf` mit dem DNS-Provider, einem A-Record für die `workhorse`-Subdomain und einem Root-Domain-Eintrag über `nsupdate`. Eine ähnliche Konfiguration wurde bereits in der letzten Aufgabe verwendet:
+
 ::: code-group
 ```hcl [main.tf]
 provider "dns" { // [!code ++:30]
@@ -66,7 +83,7 @@ resource "null_resource" "dns_root" {
 ```
 :::
 
-Anschließend kann der Code ausgeführt werden.
+Führe die Konfiguration aus:
 
 ```bash
 terraform init
@@ -75,13 +92,15 @@ terraform apply
 ```
 
 Um abschließend zu testen, ob alles korrekt ausgeführt wurde, kann es folgendermaßen getestet werden:
+
 ```bash
 dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
 
-### Hinzufügen der Aliase
+### 2. Aliase hinzufügen
 
-Um Aliase hinzuzufügen, erstellen wir einen ``dns_cname_record``
+Im nächsten Schritt erstellen wir CNAME-Records für `www` und `mail`. Über `count` wird die Ressource mehrfach erstellt, einmal pro Alias:
+
 ::: code-group
 ```hcl [main.tf]
 resource "dns_cname_record" "aliases" { // [!code ++:8]
@@ -95,19 +114,25 @@ resource "dns_cname_record" "aliases" { // [!code ++:8]
 ```
 :::
 
-Dies kann erneut ausgeführt werden. Anschließend kann wieder getestet werden, ob soweit alles geklappt hat.
+Dies kann erneut ausgeführt werden. Anschließend kann wieder getestet werden, ob soweit alles geklappt hat:
+
 ```bash
 dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
-Sollten folgende Zeilen angezeigt werden, sollte soweit alles gepasst haben:
+
+Sollten folgende Zeilen angezeigt werden, hat soweit alles funktioniert:
+
 ```
 mail.g1.sdi.hdm-stuttgart.cloud. 10 IN  CNAME   workhorse.g1.sdi.hdm-stuttgart.cloud.
 www.g1.sdi.hdm-stuttgart.cloud. 10 IN   CNAME   workhorse.g1.sdi.hdm-stuttgart.cloud.
 ```
 
-### Entfernung aller Hard-gecodeter Strings, Erstellung von Variablen
-Da wird bisher mit wenigen Variablen gearbeitet haben, definieren wir sie und ersetzen die Strings damit.
-Wir erstellen dafür ein neues File mit dem Namen ``config.auto.tfvars``, in der die Variablen initialisiert werden.
+### 3. Hartcodierte Strings durch Variablen ersetzen
+
+Da wir bisher mit wenigen Variablen gearbeitet haben, definieren wir jetzt alle relevanten Werte als Terraform-Variablen.
+
+Wir erstellen ein neues File `config.auto.tfvars`, in dem die Variablen initialisiert werden:
+
 ::: code-group
 ```hcl [variable.tf]
 variable "dns_secret" {
@@ -156,7 +181,8 @@ groupName="g1"
 ```
 :::
 
-Anschließend müssen die Variablen noch richtig in die `main.tf` eingesetzt werden.
+Anschließend müssen die Variablen in der `main.tf` eingesetzt werden, um die hartcodierten Strings zu ersetzen:
+
 ::: code-group
 ```hcl [main.tf]
 provider "dns" {
@@ -202,13 +228,18 @@ resource "dns_cname_record" "aliases" {
 
 Sollte alles korrekt implementiert worden sein, können die Änderungen erneut applied und getestet werden.
 
-### Validierungen für die Variablen erstellen.
-Zuletzt müssen noch passende Validierungen erstellt werden, sodass es nicht zu konflikten kommen kann. Dabei werden drei wichtige Valierungen überprüft:
-- Gibt es bei den Aliasen Duplikate?
-- Ist ein CNAME-Record = @?
-- Überschneidet sich der Server-Name mit einem der Alias-Namen?
+### 4. Validierungen erstellen
 
-Hierfür müssen nochmal die ``main.tf`` und die ``variable.tf`` bearbeitet werden:
+Zuletzt müssen noch passende Validierungen erstellt werden, damit es nicht zu Konflikten kommen kann. Dabei werden drei wichtige Fehlerquellen überprüft:
+
+| Validierung | Prüft | Terraform-Funktion |
+|---|---|---|
+| Duplikate | Gibt es bei den Aliasen doppelte Einträge? | `distinct()` |
+| Zone Apex | Ist ein CNAME-Record auf `@` gesetzt? | `contains()` |
+| Namenskollision | Überschneidet sich der Server-Name mit einem Alias? | `contains()` |
+
+Hierfür müssen die `main.tf` und die `variable.tf` erweitert werden:
+
 ::: code-group
 ```hcl [main.tf]
 resource "dns_cname_record" "aliases" {
@@ -243,13 +274,18 @@ variable "serverAliases" {
   }
 }
 ```
-:::
+::: 
 
-Anschließend kann erneut alles applied und getestet werden.
+### 5. Abschlusstest
+
+Anschließend kann erneut alles applied und getestet werden:
+
 ```bash
 dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
-Falls alles erfolgreich geklappt hat. Sollte der Output ungefähr so aussehen:
+
+Falls alles erfolgreich geklappt hat, sollte der Output ungefähr so aussehen:
+
 ```
 g1.sdi.hdm-stuttgart.cloud. 600 IN      SOA     ns1.hdm-stuttgart.cloud. goik\@hdm-stuttgart.de. 54 604800 86400 2419200 604800
 g1.sdi.hdm-stuttgart.cloud. 10  IN      A       1.2.3.4

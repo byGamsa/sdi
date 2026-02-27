@@ -1,24 +1,26 @@
-# 17. Generating host meta data
-Diese Dokumentation beschreibt, wie du ein wiederverwendbares Terraform-Submodul HostMetaData erstellst, das einen hcloud-Server anlegt und eine JSON-Datei mit Hostmetadaten (IPv4, IPv6, Location) erzeugt.
+# 17. Host-Metadaten generieren
 
-## Solution Overview
-...
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleHostMetaGen)
 
-## Architecture
-### Components
+In dieser Übung wird ein wiederverwendbares Terraform-Submodul `HostMetaData` erstellt. Dieses Modul nimmt die Daten eines Servers entgegen und erzeugt daraus eine JSON-Datei mit Hostmetadaten (IPv4, IPv6, Location). 
 
-1. Terraform Configuration - Defines the infrastructure
-2. Cloud-Init Template - Configures the server after boot
-3. Firewall Rules - Secures the server
-4. SSH Key Management - Enables secure access
+## Architektur-Komponenten
 
-## Implementation
+| Komponente | Beschreibung |
+|---|---|
+| **Terraform Modul `host-meta-data`** | Wiederverwendbares Submodul mit eigenen Variablen und Templates |
+| **JSON Template** | Template-Datei für die strukturierte Ausgabe der Hostdaten |
+| **Modul-Einbindung** | Das Hauptprojekt verwendet das Modul über den `module`-Block |
 
-Für folgende Aufgabe verwenden wir die Codebasis welche in Aufgabe 15 bereits aufgesetzt wurde
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 15](/exercises/15-working-on-cloud-init) auf.
+
+## Übungsschritte
 
 ### 1. Submodul HostMetaData erstellen
 
-Zuerst müssen die Files neu organisiert werden. Dafür erstellen wir einen neuen `modules` Ordner, welcher das neue Modul HostMetaData enthält. Dieses ist wie folgt aufgebaut
+Zuerst müssen die Dateien neu organisiert werden. Erstelle einen neuen `modules` Ordner auf gleicher Ebene wie das Übungsverzeichnis. Das Modul `host-meta-data` enthält eigene `main.tf`, `variables.tf` und ein Template-Verzeichnis:
 
 ```sh
 .
@@ -35,11 +37,11 @@ Zuerst müssen die Files neu organisiert werden. Dafür erstellen wir einen neue
             └── hostdata.json
 ```
 
-Im nächsten Schritt befüllen wir die neu erstellten Dateien im Modul `host-meta-data`
+Im nächsten Schritt befüllen wir die neu erstellten Dateien im Modul `host-meta-data`.
 
-1.1 Tpl/hostdata.json 
+#### 1.1 Template-Datei (`tpl/hostdata.json`)
 
-Dies ist die Template-Datei, die mit templatefile() gerendert wird.
+Dies ist die Template-Datei, die mit `templatefile()` gerendert wird. Die Platzhalter werden später durch die tatsächlichen Server-Daten ersetzt:
 
 ```hcl
 {
@@ -51,9 +53,9 @@ Dies ist die Template-Datei, die mit templatefile() gerendert wird.
 }
 ```
 
-1.2 variables.tf
+#### 1.2 Variablen (`variables.tf`)
 
-Definiere die Eingangsvariablen, die das Modul benötigt
+Definiere die Eingangsvariablen, die das Modul von außen benötigt. Jede Variable ist als `nullable = false` markiert, da das Modul ohne diese Daten nicht funktionieren kann:
 
 ```hcl
 variable "location" {
@@ -76,9 +78,9 @@ variable "name" {
 }
 ```
 
-1.3 main.tf 
+#### 1.3 Hauptdatei (`main.tf`)
 
-Hier werden der Server erstellt und die JSON-Datei gerendert und geschrieben.
+Hier wird die JSON-Datei mit den tatsächlichen Werten gerendert und als lokale Datei geschrieben. Der Dateiname wird aus dem übergebenen Servernamen generiert:
 
 ```hcl
 resource "local_file" "host_data" {
@@ -91,9 +93,13 @@ resource "local_file" "host_data" {
 }
 ```
 
-### 1. SubModule einbinden
+::: tip 
+Die Variable `path.module` zeigt immer auf das Verzeichnis des aktuellen Moduls. Das stellt sicher, dass die Template-Datei relativ zum Modul gefunden wird und unabhängig davon, von wo aus das Modul aufgerufen wird.
+:::
 
-Jetzt wo du das Modul erfolgreich aufgebaut hast, muss dieser nur noch in der `main.tf` des Exercize Ordners eingebunden werden. Erweitere diese dafür um folgendes:
+### 2. Submodul einbinden
+
+Jetzt, wo das Modul aufgebaut ist, muss es in der `main.tf` des Übungsordners eingebunden werden. Über den `module`-Block wird die Quelle (`source`) angegeben und die erforderlichen Variablen mit den Server-Attributen befüllt:
 
 ```sh
 module "host_metadata" { # [!code ++:7]
@@ -105,9 +111,13 @@ module "host_metadata" { # [!code ++:7]
 }
 ```
 
-Nach erfolgreicher Ausführung erzeugt das Submodul in deinem Parent-Verzeichnis die Datei `Gen/debian_server.json`.
+::: info
+Nach dem Hinzufügen eines neuen Moduls muss `terraform init` erneut ausgeführt werden, damit Terraform das Modul registriert.
+:::
 
-### Erwartetes Ergebnis (debian-server.json)
+### 3. Erwartetes Ergebnis
+
+Nach erfolgreicher Ausführung mit `terraform apply` erzeugt das Submodul im Verzeichnis `gen` die Datei `debian_server.json` mit den Metadaten des Servers:
 
 ```sh
 {
@@ -117,4 +127,4 @@ Nach erfolgreicher Ausführung erzeugt das Submodul in deinem Parent-Verzeichnis
   },
   "location": "hel1"
 }
-```
+``` 

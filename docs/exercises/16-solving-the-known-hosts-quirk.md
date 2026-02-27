@@ -1,7 +1,27 @@
-# Solving the `~/.ssh/known_hosts` quirk
-Diese Dokumentation beschreibt die Implementierung von Hilfsskripten, um die Nachricht: ` WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` zu vermeiden
+# 16. Das `~/.ssh/known_hosts` Problem lösen
 
-Dazu müssen wir zu Beginn zwei Skripte im Ordner `tpl` erstellen. 
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_solveSshKnownHosts)
+
+Wenn Server bei Hetzner Cloud zerstört und neu erstellt werden, erhalten sie neue Host Keys. Das führt zur bekannten SSH-Warnung: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`. In dieser Übung lösen wir dieses Problem, indem wir eigene SSH Host Keys generieren, sie dem Server über Cloud-Init übergeben und Wrapper-Skripte erstellen, die ein separates `known_hosts`-File verwenden.
+
+## Architektur-Komponenten
+
+| Komponente | Beschreibung |
+|---|---|
+| **TLS Private Key** | Von Terraform generierter ED25519 SSH Host Key |
+| **`gen/known_hosts`** | Eigenes Known-Hosts-File mit dem generierten Public Key |
+| **`bin/ssh` und `bin/scp`** | Wrapper-Skripte, die das eigene Known-Hosts-File verwenden |
+| **Cloud-Init Template** | Übergibt den Private Key an den Server, damit er den richtigen Host Key hat |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 15](/exercises/15-working-on-cloud-init) auf. Die dort erstellte Cloud-Init Konfiguration wird hier um den SSH Host Key erweitert.
+
+## Übungsschritte
+
+### 1. Wrapper-Skripte erstellen
+
+Zuerst erstellen wir im Ordner `tpl` zwei Template-Skripte für SSH und SCP. Diese verwenden die Option `-o UserKnownHostsFile`, um ein eigenes Known-Hosts-File statt des systemweiten `~/.ssh/known_hosts` zu nutzen.
 
 ::: code-group
 ```bash [ssh.sh]
@@ -24,7 +44,11 @@ fi
 ```
 :::
 
-Jetzt muss ein Schlüssel erstellt werden, auf den wir zugreifen können. Zudem muss ein eigenes known_hosts File erstellt werden, in das direkt der User, die IP und der zugehörige Public-Key eingetragen wird. Dieses soll im Ordner `gen` stehen.
+Die Platzhalter `${devopsUsername}` und `${ip}` werden später durch `templatefile()` mit den tatsächlichen Werten ersetzt.
+
+### 2. Host Key und known_hosts generieren
+
+Jetzt erstellen wir einen TLS-Schlüssel mit dem ED25519-Algorithmus. Aus dessen öffentlichem Teil und der Server-IP-Adresse wird eine eigene `known_hosts`-Datei zusammengesetzt und im Ordner `gen` abgelegt.
 
 ::: code-group
 ```hcl [main.tf]
@@ -44,7 +68,9 @@ resource "local_file" "known_hosts" { // [!code ++]
 ```
 :::
 
-Außerdem müssen wir aus den Templates ausführbare Files generieren. Diese sollen in den Ordner `bin` landen. Wir fügen dazu diesen Code ein (der Username wurde ebenfalls als Variable ausgelagert, muss man in diesem Fall ebenfalls anpassen):
+### 3. Ausführbare Skripte generieren
+
+Aus den Templates müssen noch ausführbare Dateien im Ordner `bin` generiert werden. Der Username wurde ebenfalls als Variable ausgelagert (`var.loginUser`) und muss deshalb ebenfalls angepasst werden:
 
 ::: code-group
 ```hcl [main.tf]
@@ -66,9 +92,14 @@ resource "local_file" "scp_script" { //[!code ++]
   file_permission = "755" //[!code ++]
 } //[!code ++]
 ```
-:::
+::: 
 
-Zuletzt muss der private-key der `userData.yml` hinzugefügt werden, sodass der Server den Key erhält.
+### 4. Private Key an Cloud-Init übergeben
+
+Damit der Server auch tatsächlich den von uns generierten Host Key verwendet, muss der Private Key über die `userData.yml` an den Server übergeben werden. Cloud-Init kann über das `ssh_keys` Modul Host Keys setzen.
+
+Zuletzt muss der Private Key der `userData.yml` hinzugefügt und der SSH-Service neugestartet werden, damit der Key aktiv wird:
+
 ::: code-group
 ```hcl [main.tf]
 resource "local_file" "user_data" {
@@ -92,8 +123,8 @@ packages:
 ssh_pwauth: false
 disable_root: true
 
-ssh_keys:  //[!code ++]
-  ed25519_private: |  //[!code ++]
+ssh_keys:  //[!code ++:3]
+  ed25519_private: |  
     ${tls_private_key}   
     
 ssh_pwauth: false
@@ -113,6 +144,31 @@ users:
 ```
 :::
 
-Wenn jetzt nach `terraform apply` die Files erstellt wurden, kann man `./bin/ssh` ausführen. Das Problem sollte somit behoben sein.
+::: info
+Die Funktion `indent(4, ...)` sorgt dafür, dass der mehrzeilige Private Key korrekt eingerückt in die YAML-Datei eingefügt wird. Ohne korrekte Einrückung wäre die YAML-Datei ungültig.
+:::
 
-Zudem kann das andere File ausgeführt werden, um Files zu kopieren. Ein Beispielaufruf des Files sollte so aussehen (IP, Name, Pfade müssen angepasst werden): `./bin/scp test.txt  devops@65.21.251.129:/home/devops`
+### 5. Ergebnis überprüfen
+
+Nach `terraform apply` werden folgende Dateien generiert:
+
+| Datei | Beschreibung |
+|---|---|
+| `bin/ssh` | SSH-Wrapper mit eigenem Known-Hosts-File |
+| `bin/scp` | SCP-Wrapper mit eigenem Known-Hosts-File |
+| `gen/known_hosts` | Known-Hosts-Datei mit Server-IP und Public Key |
+| `gen/userData.yml` | Generiertes Cloud-Init Template |
+
+Verbinde dich mit dem Server über den Wrapper:
+
+```bash
+./bin/ssh
+```
+
+Das `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` Problem sollte damit behoben sein, da der SSH-Client nun den von uns generierten Key gegen die eigene `known_hosts`-Datei prüft.
+
+Dateien können mit dem SCP-Wrapper kopiert werden (IP, Name und Pfade entsprechend anpassen):
+
+```bash
+./bin/scp test.txt devops@65.21.251.129:/home/devops
+```

@@ -1,24 +1,29 @@
-# 15. Working on Cloud-init
-This documentation describes the implementation of an incrementally build robust server configuration using Cloud-Init.
+# 15. Cloud-Init erweitern
 
-## Solution Overview
-...
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_gettingStarted)
 
-## Architecture
-### Components
+In dieser Übung wird die bestehende Server-Konfiguration schrittweise zu einer robusten Cloud-Init-basierten Lösung ausgebaut. Anstelle eines einfachen Shell-Scripts wird ein flexibles YAML-Template eingeführt, das über Terraform-Variablen gesteuert wird. Damit lassen sich Benutzerverwaltung, SSH-Sicherheit und Paketinstallation deklarativ und wiederholbar konfigurieren.
 
-1. Terraform Configuration - Defines the infrastructure
-2. Cloud-Init Template - Configures the server after boot
-3. Firewall Rules - Secures the server
-4. SSH Key Management - Enables secure access
+## Architektur-Komponenten
 
-## Implementation
+| Komponente | Beschreibung |
+|---|---|
+| **Terraform Konfiguration** | Definiert die Infrastruktur und rendert das Cloud-Init Template |
+| **Cloud-Init Template (`userData.yml`)** | YAML-basierte Serverkonfiguration, die beim ersten Boot ausgeführt wird |
+| **`templatefile()` Funktion** | Terraform-Funktion, die Variablen in das Template einsetzt |
+| **Firewall** | Erweitert um SSH-Zugriff (Port 22) zusätzlich zu HTTP (Port 80) |
 
-Für folgende Aufgabe verwenden wir die Codebasis welche in Aufgabe 14 bereits aufgesetzt wurde
+## Codebasis
 
-### 1. Creating a Simple Web Server
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 14](/exercises/14-cloud-init) auf. Der dort erstellte Server mit Nginx-Init-Script wird hier auf ein flexibles Cloud-Init Template umgestellt.
 
-Zu allererst muss die aktuelle firewall configuration erweitert werden damit diese inbound traffic für port 22 zulässt
+## Übungsschritte
+
+### 1. Firewall um SSH-Zugriff erweitern
+
+In der vorherigen Aufgabe haben wir nur eine HTTP-Firewall (Port 80) verwendet. Für die Verwaltung des Servers benötigen wir aber auch SSH-Zugriff (Port 22). Deshalb erstellen wir eine kombinierte Firewall, die beide Ports erlaubt.
+
+Dafür wird die bisherige Firewall-Ressource umbenannt und um eine zweite Regel erweitert:
 
 ```hcl
 resource "hcloud_firewall" "fw" { // [!code ++]
@@ -39,7 +44,7 @@ resource "hcloud_firewall" "httpFw" { // [!code --]
 }
 ```
 
-Diese Firewall Ressource muss anschließend in der Server Ressource referenziert werden, dafür tauschen wir die alte Defintion für das Attribut firewall_ids mit unserer neuen Firewall Ressource aus.
+Da die Firewall-Ressource umbenannt wurde (von `httpFw` zu `fw`), muss auch die Referenz in der Server-Ressource aktualisiert werden:
 
 ```hcl
   resource "hcloud_server" "helloServer" {
@@ -53,17 +58,22 @@ Diese Firewall Ressource muss anschließend in der Server Ressource referenziert
 }
 ```
 
-### 2. Modify our current Cloud-init configuration
+### 2. Von Shell-Script auf Cloud-Init Template umsteigen
 
-Die bisherige Lösung nutzte eine einfache Datei:
+Die bisherige Lösung nutzte eine einfache Bash-Datei:
 
 ```hcl
 user_data = file("init.sh")
 ```
 
-Diese Methode ist unflexibel, schwer zu erweitern und lässt keine Variablen zu.Stattdessen soll ein Cloud-Init YAML Template verwendet werden, das über templatefile() dynamisch erzeugt wird.
+Diese Methode hat mehrere Nachteile:
+- **Keine Variablen**: Alle Werte müssen hartcodiert werden
+- **Schwer erweiterbar**: Komplexe Konfigurationen werden schnell unübersichtlich
+- **Nicht deklarativ**: Shell-Scripts sind imperativ, Cloud-Init ist deklarativ
 
-Wir erstellen zunächst eine Vorlage unter tpl/userData.yml. Sie enthält Cloud-Init Anweisungen und Variablen, die Terraform füllt. Außerdem 
+Stattdessen verwenden wir ein Cloud-Init YAML-Template, das über `templatefile()` dynamisch erzeugt wird. Diese Terraform-Funktion ersetzt Platzhalter (`${variable}`) im Template durch die übergebenen Werte.
+
+Erstelle eine Vorlage unter `tpl/userData.yml` und passe die `main.tf` entsprechend an:
 
 ::: code-group
 ```hcl [main.tf]
@@ -117,45 +127,49 @@ package_upgrade: true
 ``` 
 ::: 
 
-This complete `userData.yml` configuration includes:
+Die `local_file` Ressource rendert das Template und schreibt das Ergebnis nach `gen/userData.yml`. Das hat den Vorteil, dass man die generierte Datei inspizieren und debuggen kann.
 
-- **User Management**: Creates a new user with sudo privileges and SSH key access
-- **SSH Security**: Disables password authentication and root login
-- **Package Management**: Updates and upgrades all packages
-- **Web Server**: Installs and configures Nginx with a custom welcome page 
+### Überprüfung
 
-You can verify the setup by checking:
+Nach `terraform apply` kann das Setup mit folgenden Befehlen überprüft werden:
 
-- `ssh root@95.217.154.104` - for prohibited root access
-- `ssh -v devops@95.217.154.104` - for ssh access to another user
-- `journalctl -f` - for logs
-- `apt list --upgradable` - should be empty after updates
-- `systemctl status nginx` - for Nginx status
+| Befehl | Erwartetes Ergebnis |
+|---|---|
+| `ssh root@<SERVER_IP>` | Zugriff sollte **verweigert** werden |
+| `ssh -v devops@<SERVER_IP>` | SSH-Zugriff als `devops` Benutzer |
+| `journalctl -f` | Cloud-Init Logs anzeigen |
+| `apt list --upgradable` | Sollte leer sein (alle Updates installiert) |
+| `systemctl status nginx` | Nginx sollte aktiv sein |
 
-### 3. Extend Cloud-init configuration
+### 3. Cloud-Init Konfiguration erweitern
+
+Die Cloud-Init Konfiguration kann beliebig erweitert werden. Im Folgenden fügen wir drei nützliche Erweiterungen hinzu:
 
 #### 3.1 System-Upgrade sicherstellen
 
-Provider-Abbilder führen kein vollständiges Upgrade aus.Cloud-Init übernimmt dies mit:
+Die Provider-Abbilder von Hetzner führen kein vollständiges Upgrade aus. Über Cloud-Init können wir sicherstellen, dass alle Pakete beim ersten Boot aktualisiert werden:
 
+```hcl
 package_update: true
 package_upgrade: true
+```
 
 #### 3.2 Fail2Ban installieren
 
-Schutz vor SSH-Bruteforce-Angriffen:
+Fail2Ban schützt den Server vor SSH-Bruteforce-Angriffen, indem es IP-Adressen nach mehreren fehlgeschlagenen Login-Versuchen automatisch sperrt:
 
+```hcl
 packages:
-  - fail2ban
+  - fail2ban// [!code ++]
+```
 
 #### 3.3 Plocate installieren
 
-Schnelle Dateisuche:
+Plocate ermöglicht eine schnelle Dateisuche auf dem Server. Nach der Installation muss die Datenbank einmalig aufgebaut werden:
 
+```hcl
 packages:
-  - plocate
+  - plocate// [!code ++]
 runcmd:
-  - updatedb
-
-Die Finale template Datei sollte also aussehen wie folgt:
-
+  - updatedb// [!code ++]
+```

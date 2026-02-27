@@ -1,24 +1,29 @@
-# 14. Automatic Nginx installation
-This documentation describes the implementation of an automated Nginx installation using Terraform and Cloud-Init.
+# 14. Automatische Nginx-Installation
 
-## Solution Overview
-The solution uses Terraform in combination with Cloud-Init to fully automate a Debian server setup. Not only is Nginx installed, but security measures and system configurations are also implemented.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_NginxByBash)
 
-## Architecture
-### Components
+In dieser Übung wird ein Webserver (Nginx) automatisch bei der Servererstellung installiert. Anstatt den Server manuell nach der Erstellung zu konfigurieren, nutzen wir Cloud-Init, ein Initialisierungstool, das beim ersten Bootvorgang ein Shell-Script ausführt und so den Server vollautomatisch einrichtet.
 
-1. Terraform Configuration - Defines the infrastructure
-2. Cloud-Init Template - Configures the server after boot
-3. Firewall Rules - Secures the server
-4. SSH Key Management - Enables secure access
+## Architektur-Komponenten
 
-## Implementation
+| Komponente | Beschreibung |
+|---|---|
+| **Terraform Konfiguration** | Definiert die Infrastruktur und übergibt das Init-Script |
+| **Cloud-Init Script (`init.sh`)** | Shell-Script, das beim ersten Boot Nginx installiert und startet |
+| **HTTP Firewall** | Neue Firewallregel für Port 80, damit die Webseite erreichbar ist |
+| **SSH Key Management** | Ermöglicht sicheren Zugriff auf den Server |
 
-Für folgende Aufgabe verwenden wir die Codebasis welche in Aufgabe 13 bereits aufgesetzt wurde
+## Codebasis
 
-### 1. Creating the Initialization Script
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 13](/exercises/13-incrementally-creating-a-base-system) auf. Der dort erstellte Server mit Firewall und SSH-Key wird hier um Cloud-Init erweitert.
 
-Zu allererst muss eine Bash Datei mit beispielsweise dem Namen init.sh erstellt werde, welche die nötigen Commands enthält
+## Übungsschritte
+
+### 1. Initialisierungsskript erstellen
+
+Der erste Schritt ist die Erstellung eines Bash-Scripts, das die nötigen Befehle für die Nginx-Installation enthält. Dieses Script wird später beim ersten Serverstart automatisch ausgeführt.
+
+Erstelle eine Datei `init.sh` im Projektverzeichnis:
 
 ::: code-group
 ```bash [init.sh]
@@ -34,11 +39,11 @@ apt install -y nginx
 systemctl start nginx
 systemctl enable nginx
 ```
-:::
+::: 
 
-### 2. Configuring the Server Resource
+### 2. Server-Ressource anpassen
 
-Als nächstes muss die Server Ressource "hcloud_server" in der main.tf Datei wie folgt angepasst werden, damit diese unsere zuvor erstellte init.sh ausführt. Dafür verwenden wir das user_data Attribut
+Als nächstes muss die Server-Ressource `hcloud_server` in der `main.tf` Datei angepasst werden. Über das `user_data` Attribut wird das zuvor erstellte Init-Script an den Server übergeben. Hetzner Cloud übergibt den Inhalt dieses Feldes an Cloud-Init, das es beim ersten Boot ausführt.
 
 ```hcl [main.tf]
 resource "hcloud_server" "web_server" {
@@ -51,9 +56,17 @@ resource "hcloud_server" "web_server" {
 }
 ```
 
-### 3. Granting SSH Access
+Die Terraform-Funktion `file("init.sh")` liest den Inhalt der Datei und übergibt ihn als String an die Ressource.
 
-Um auf die Nginx Webseite zugreifen zu können muss eine neue Firewallregel aufgestellt werden welche den Port 80 zulässt. Dafür erstellen wir eine neue Ressource hcloud_firewall
+::: info 
+Cloud-Init wird nur beim **ersten Start** des Servers ausgeführt. Wenn du Änderungen am Script vornimmst, musst du den Server zerstören und neu erstellen (`terraform destroy` + `terraform apply`), damit die Änderungen wirksam werden.
+:::
+
+### 3. HTTP-Zugriff per Firewall erlauben
+
+Der Nginx Webserver lauscht standardmäßig auf Port 80 (HTTP). Da unsere bestehende Firewall nur Port 22 (SSH) erlaubt, müssen wir eine neue Firewallregel für HTTP-Verkehr erstellen. Ohne diese Regel wäre die Webseite von außen nicht erreichbar.
+
+Erstelle eine neue Firewall-Ressource:
 
 ```hcl
 resource "hcloud_firewall" "httpFw" {
@@ -67,7 +80,7 @@ resource "hcloud_firewall" "httpFw" {
 }
 ```
 
-Diese Firewall Ressource muss anschließend in der Server Ressource referenziert werden, dafür tauschen wir die alte Defintion für das Attribut firewall_ids mit unserer neuen Firewall Ressource aus.
+Diese Firewall-Ressource muss anschließend in der Server-Ressource referenziert werden. Dafür tauschen wir die alte Definition für das Attribut `firewall_ids` mit unserer neuen Firewall-Ressource aus:
 
 ```hcl
   resource "hcloud_server" "helloServer" {
@@ -81,15 +94,15 @@ Diese Firewall Ressource muss anschließend in der Server Ressource referenziert
 }
 ```
 
-## Verification
+### 4. Ergebnis überprüfen
 
-Nach dem wir erfolgreich deployed haben lässt sich das Ergebnis verifizieren in dem wir folgenden Befehl ausführen.
+Nach dem erfolgreichen Deploy mit `terraform apply` lässt sich das Ergebnis verifizieren. Der folgende Befehl fragt die IP-Adresse über Terraform ab und sendet einen HTTP-Request an den Webserver:
 
 ```bash
   curl http://$(terraform output -raw ip_addr)
 ```
 
-Als Resultat solltest du den HTML Quellcode der Nginx Website sehen
+Als Resultat sollte der HTML-Quellcode der Nginx-Willkommensseite erscheinen:
 
 ```html
   <!DOCTYPE html>
@@ -115,4 +128,4 @@ Als Resultat solltest du den HTML Quellcode der Nginx Website sehen
   <p><em>Thank you for using nginx.</em></p>
   </body>
   </html>
-```
+``` 

@@ -1,12 +1,28 @@
-# 23. Creating a host with corresponding DNS entries
+# 23. Host mit DNS-Einträgen erstellen
 
-Diese Aufgabe baut auf dem bestehenden Code der Aufgabe 16 (Solving the known host quirk) und der Aufgabe 22 (Creating DNS records) auf.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_dns_quanda_hostAndDns)
 
-Dabei geht es darum, den Server-DNS-Name (``workhorse.g1.sdi.hdm-stuttgart.cloud``) statt der IP im ``ssh``, ``scp`` und ``known-hosts`` File zu benutzen.
+In dieser Übung wird ein vollständiger Server mit passenden DNS-Einträgen erstellt und die SSH-Wrapper so angepasst, dass sie den DNS-Namen statt der IP-Adresse verwenden. Das macht die gesamte Konfiguration robuster.
 
-### Zusammensetzung des Codes der beiden Aufgaben
+## Architektur-Komponenten
 
-Zunächst nehmen wir als Basiscode den Code aus Aufgabe 16. Dabei fügen wir sowohl den Code aus der ``main.tf`` der Aufgabe 22 hinzu, als auch die neu erstellten Variablen.
+| Komponente | Beschreibung |
+|---|---|
+| **DNS Provider** | Erstellt A-Records und CNAME-Aliase für den Server |
+| **SSH-Wrapper mit DNS** | `ssh.sh` und `scp.sh` verwenden DNS-Namen statt IP-Adressen |
+| **Known Hosts mit FQDN** | `known_hosts`-File verwendet den FQDN statt der IP |
+| **TLS Key** | Generiert SSH Host Key für den Server |
+| **Dynamische Server-IP** | A-Records verwenden die tatsächliche IP des erstellten Servers |
+
+## Codebasis
+
+Diese Aufgabe baut auf dem Code von [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) (SSH Known Hosts) und [Aufgabe 22](/exercises/22-creating-dns-records) (DNS Records) auf. Der Code beider Aufgaben wird zusammengeführt.
+
+## Übungsschritte
+
+### 1. Code beider Aufgaben zusammenführen
+
+Zunächst nehmen wir als Basiscode den Code aus Aufgabe 16. Dabei fügen wir sowohl den DNS-Code aus der `main.tf` der Aufgabe 22 hinzu, als auch die dort neu erstellten Variablen.
 
 ::: code-group
 ```hcl [main.tf]
@@ -144,7 +160,9 @@ variable "serverAliases" {
 ```
 :::
 
-Im nächsten Schritt passen wir den Code an unsere Aufgabenstellung an. Somit ist die Variable ``serverIp`` überflüssig und wir verwenden stattdessen die IP des erstellten Servers. 
+### 2. Server-IP durch dynamische Referenz ersetzen
+
+Im nächsten Schritt passen wir den Code an die eigentliche Aufgabenstellung an. Die Variable `serverIp` ist überflüssig, da wir jetzt die echte IP des erstellten Servers verwenden.
 
 ::: code-group
 ```hcl [variable.tf]
@@ -192,9 +210,9 @@ resource "null_resource" "dns_root" {
 ```
 :::
 
-### Anpassung des ``ssh`` und ``scp`` Files
+### 3. SSH- und SCP-Skripte auf DNS-Namen umstellen
 
-Als nächstes müssen die ssh und scp Files angepasst werden, indem man die IP mit dem DNS-Namen austauscht.
+Als nächstes müssen die SSH- und SCP-Template-Dateien angepasst werden. Anstelle der IP-Adresse wird jetzt der DNS-Name (`${dnsName}`) als Verbindungsziel verwendet:
 
 ::: code-group
 ```bash [tpl/ssh.sh]
@@ -217,9 +235,10 @@ fi
 ```
 :::
 
-### Änderung der Übergabewerte
+### 4. Übergabewerte anpassen
 
-Zuletzt müssen die Übergabewerte für die Files angepasst werden. Dabei wird statt der IP, der ``serverName`` und die ``dnsZone`` übergeben.
+Zuletzt müssen die Übergabewerte für die generierten Dateien angepasst werden. Dabei wird statt der IP der `serverName` und die `dnsZone` übergeben.
+
 ::: code-group
 ```hcl [main.tf]
 resource "local_file" "known_hosts" { 
@@ -248,10 +267,10 @@ resource "local_file" "scp_script" {
 ```
 :::
 
-### Ergebnisse kontrollieren
+### 5. Ergebnisse kontrollieren
 
-Abschließend kann man alles ausführen und die Ergebnisse überprüfen. 
-Dabei sollten die generierten Files folgt aussehen, falls alles erfolgreich geklappt hat:
+Abschließend kann man alles ausführen und die Ergebnisse überprüfen. Die generierten Dateien sollten jetzt den DNS-Namen statt der IP enthalten:
+
 ::: code-group
 ``` [gen/known_hosts]
 workhorse.g1.sdi.hdm-stuttgart.cloud ssh-ed25519 AAAAC....
@@ -277,7 +296,8 @@ fi
 ```
 :::
 
-Zusätzlich können die Files augeführt werden, um auf erfolgreiche Funktionalität zu prüfen. Außerdem kann der Befehl der vorherigen Aufgaben zur zusätzlichen Prüfung ebenfalls ausgeführt werden.
+Zusätzlich können die generierten Skripte ausgeführt werden, um die Funktionalität zu prüfen. Außerdem kann die DNS-Konfiguration über den Zone Transfer verifiziert werden:
+
 ```bash
 dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```

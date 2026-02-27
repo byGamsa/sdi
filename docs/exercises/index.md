@@ -1,0 +1,20 @@
+# Übungen
+
+Übersicht aller Übungen mit Verlinkungen zur jeweiligen Dokumentation und den originalen Aufgabenstellungen aus den [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/apf.html).
+
+## Cloud Provider (Terraform)
+
+| # | Übung | Aufgabenstellung |
+|---|-------|-------------------|
+| 13 | [Incrementally creating a base system](/exercises/13-incrementally-creating-a-base-system) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_terra.html#sdi_cloudProvider_terra_qandaBasicSystem) |
+| 14 | [Automatic Nginx installation (Cloud-init)](/exercises/14-cloud-init) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_NginxByBash) |
+| 15 | [Working on Cloud-init](/exercises/15-working-on-cloud-init) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_gettingStarted) |
+| 16 | [Solving the known_hosts quirk](/exercises/16-solving-the-known-hosts-quirk) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_cloudInit.html#sdi_cloudProvider_cloudInit_qanda_solveSshKnownHosts) |
+| 17 | [Generating host meta data](/exercises/17-generating-host-meta-data) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleHostMetaGen) |
+| 18 | [A module for SSH host key handling](/exercises/18-a-module-for-ssh-host-key-handling) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleFileGen) |
+| 19 | [Partitions and mounting](/exercises/19-partitions-and-mounting) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_volume.html#sdi_cloudProvider_volume_qanda_ManualMount) |
+| 20 | [Mount point's name specification](/exercises/20-mounts-points-name-specification) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_volume.html#sdi_cloudProvider_volume_qanda_mountPointName) |
+| 21 | [Enhancing your web server](/exercises/21-enhancing-your-web-server) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#_qanda) |
+| 22 | [Creating DNS records](/exercises/22-creating-dns-records) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_dns_quandaPureDns) |
+| 23 | [Creating a host with corresponding DNS entries](/exercises/23-creating-host-with-corresponding-dns-entries) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_dns_quanda_hostAndDns) |
+| 24 | [Creating a fixed number of servers](/exercises/24-creating-a-fixed-number-of-servers) | [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_loops_qanda_multiServerGen) |

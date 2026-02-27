@@ -1,24 +1,27 @@
-# 19. Partitions and mounting 
-Dieses Kapitel behandelt die Verwaltung externer Block-Storage-Volumes. In dieser Übung bindest du ein neues Volume an einen Server an und führst die Schritte zum Partitionieren, Formatieren, Einhängen manuell durch und automatisierst den Prozess, sodass das Volume auch nach einem Neustart dauerhaft eingebunden bleibt.
+# 19. Partitionen und Mounting
 
-## Solution Overview
-...
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_volume.html#sdi_cloudProvider_volume_qanda_ManualMount)
 
-## Architecture
-### Components
+In dieser Übung wird ein externes Block-Storage-Volume an einen Server angebunden. Dabei werden die grundlegenden Linux-Konzepte zum Partitionieren, Formatieren und Einhängen von Dateisystemen manuell durchgeführt. Anschließend wird das Mounting persistent gemacht, sodass das Volume auch nach einem Server-Neustart automatisch wieder zur Verfügung steht.
 
-1. Terraform Configuration - Defines the infrastructure
-2. Cloud-Init Template - Configures the server after boot
-3. Firewall Rules - Secures the server
-4. SSH Key Management - Enables secure access
+## Architektur-Komponenten
 
-## Implementation
+| Komponente | Beschreibung |
+|---|---|
+| **Hetzner Volume** | 10 GB externer Block-Storage, unabhängig vom Server-Lebenszyklus |
+| **Volume Attachment** | Terraform-Ressource zur Verknüpfung von Volume und Server |
+| **Cloud-Init Workaround** | Löst den Automount-Bug über `udevadm trigger` |
+| **fstab** | Linux-Konfigurationsdatei für persistentes Mounting nach Neustarts |
 
-Für folgende Aufgabe verwenden wir die Codebasis welche in Aufgabe 18 bereits aufgesetzt wurde
+## Codebasis
 
-### 1. Mounted Volume erstellen und anbinden
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 18](/exercises/18-a-module-for-ssh-host-key-handling) auf.
 
-Zu allererst muss das neue Volume definiert und an die Server Ressource gemounted werden. Außerdem definieren wir eine Output Direktive welche uns nach die id des Volumes übergibt
+## Übungsschritte
+
+### 1. Volume erstellen und anbinden
+
+Zuerst definieren wir das Volume in Terraform und binden es an unseren Server. Der Parameter `automount = true` sorgt dafür, dass Hetzner das Volume automatisch formatiert und mountet. Zusätzlich erstellen wir einen Output, um die Volume-ID abfragen zu können:
 
 ::: code-group
 
@@ -57,13 +60,16 @@ runcmd:
 
 ```
 
+Der Befehl `udevadm trigger` löst die udev-Regeln erneut aus, die für das Erkennen und Einbinden des Volumes zuständig sind. Der anschließende `reboot` stellt sicher, dass alle Systemd-Mount-Units korrekt geladen werden.
 :::
 
-### 2. Manual Partitioning and Mounting
+### 2. Manuelles Partitionieren und Mounten
 
-### 2.1. Ergebnisse überprüfen
+In den folgenden Schritten arbeiten wir direkt auf dem Server und lernen die grundlegenden Linux-Befehle für Volume-Management kennen.
 
-Nach dem Neustart verschaffe dir mit dem Befehl `df -h` einen Überblick über die lokalen Dateisysteme, um das neu angebundene Volume zu identifizieren. Es sollte dann aussehen wie folgt:
+#### 2.1 Ergebnisse überprüfen
+
+Nach dem Neustart verschaffe dir mit `df -h` einen Überblick über die lokalen Dateisysteme, um das neu angebundene Volume zu identifizieren:
 
 ```bash
 devops@debian-server:~$ df -h
@@ -82,12 +88,25 @@ tmpfs           1.0M     0  1.0M   0% /run/credentials/serial-getty@ttyS0.servic
 tmpfs           383M  8.0K  383M   1% /run/user/1000
 ```
 
-### 2.2. Unmounte den auto-mounted Volume
-Verwende den Befehl `sudo umount /mnt/HC_Volume_<VOLUME_ID>`, dafür darf man sich nicht im Volume Verzeichnis selbst befinden, da es sich um ein busy target handelt `umount: /mnt/HC_Volume_104441845: target is busy.`.
+Das Volume (`/dev/sda`) ist unter `/mnt/HC_Volume_<VOLUME_ID>` gemountet.
 
-### 2.3. Volume partitionieren
-Im Folgenden Schritt wollen wir das Volume in 2 Partionen teilen. Verwende dafür den Befehl `sudo fdisk /dev/sdb`. 
-Zu allererst müssen wir die bestehende Datenpartition löschen:
+#### 2.2 Auto-mounted Volume unmounten
+
+Bevor wir das Volume manuell partitionieren können, muss es zuerst unmountet werden:
+
+```bash
+sudo umount /mnt/HC_Volume_<VOLUME_ID>
+```
+
+::: warning
+Stelle sicher, dass du dich nicht im Volume-Verzeichnis selbst befindest, da es sich sonst um ein „busy target" handelt und der Unmount fehlschlägt: `umount: /mnt/HC_Volume_104441845: target is busy.`
+:::
+
+#### 2.3 Volume partitionieren
+
+Im folgenden Schritt teilen wir das Volume in zwei Partitionen. Verwende dafür den Befehl `sudo fdisk /dev/sdb`.
+
+**Bestehende Datenpartition löschen:**
 
 ```bash
 Command (m for help): d
@@ -95,7 +114,7 @@ Partition number (1,14,15, default 15): 1
 Partition 1 has been deleted.
 ```
 
-Mit `p` lässt sich die aktuelle Partitionstabelle prüfen:
+**Aktuelle Partitionstabelle prüfen** mit `p`:
 
 ```bash
 Command (m for help): p
@@ -107,7 +126,7 @@ Device      Start    End      Sectors  Size Type
 /dev/sdb15   4096   503807   499712  244M EFI System
 ```
 
-Erste Partition erstellen (~5 GiB)
+**Erste Partition erstellen** (~5 GiB):
 
 ```bash
 Command (m for help): n
@@ -116,7 +135,7 @@ First sector (34-80003038, default 503808): ⏎
 Last sector, +/-sectors or +/-size{K,M,G,T,P} (503808-80003038, default 80001023): +5G
 ```
 
-Zweite Partition erstellen (Rest des Volumes)
+**Zweite Partition erstellen** (Rest des Volumes):
 
 ```bash
 Command (m for help): n
@@ -125,7 +144,7 @@ First sector (10989568-80003038, default 10989568): ⏎
 Last sector, +/-sectors or +/-size{K,M,G,T,P} (10989568-80003038, default 80001023): ⏎
 ```
 
-Ergebnis prüfen:
+**Ergebnis prüfen:**
 
 ```bash
 Command (m for help): p
@@ -135,63 +154,78 @@ Device     Boot    Start      End  Sectors Size Id Type
 /dev/sdb2       10487808 20971519 10483712   5G 83 Linux
 ```
 
-### 2.3 Dateisysteme auf neuen Partitionen erstellen
-Nachdem wir das Volume in zwei Partitionen geteilt haben, erstellen wir nun unterschiedliche Dateisysteme auf jeder Partition.
+::: tip
+Vergiss nicht, die Änderungen mit `w` (write) zu speichern, bevor du `fdisk` beendest.
+:::
 
-#### Ext4-Dateisystem auf der ersten Partition
+#### 2.4 Dateisysteme erstellen
+
+Nachdem wir das Volume in zwei Partitionen geteilt haben, erstellen wir auf jeder Partition ein anderes Dateisystem, um die Unterschiede kennenzulernen:
+
+**Ext4-Dateisystem** auf der ersten Partition (das Standarddateisystem für die meisten Linux-Distributionen):
 
 ```bash
 sudo mkfs -t ext4 /dev/sdb1
 ```
 
-#### XFS-Dateisystem auf der zweiten Partition
+**XFS-Dateisystem** auf der zweiten Partition (ein leistungsstarkes Dateisystem für große Datenmengen):
 
 ```bash
 sudo mkfs -t xfs /dev/sdb2
 ```
 
-#### Überprüfung der Dateisysteme
+**Überprüfung** der erstellten Dateisysteme:
 
 ```bash
 lsblk -f
 ```
 
-### 2.4. Erstelle zwei Ordner für das mounting
+#### 2.5 Mount-Verzeichnisse erstellen
+
+Erstelle zwei Ordner, die als Mount-Punkte dienen:
 
 ```bash
 sudo mkdir /disk1 /disk2
 ```
 
-### 2.5. Mounting der ersten Partition an den ersten Ordner
+#### 2.6 Erste Partition mounten (nach Device-Name)
 
 ```bash
 sudo mount /dev/sdb1 /disk1
 ```
 
-### 2.6. Mounting der zweiten Partition an den zweiten Ordner anhand der UUID
+#### 2.7 Zweite Partition mounten (nach UUID)
+
+Die UUID ist eindeutig und ändert sich nicht, auch wenn sich die Device-Reihenfolge ändert. Das macht sie zur bevorzugten Methode:
 
 ```bash
 UUID=$(sudo blkid -s UUID -o value /dev/sdb2)
 sudo mount UUID=$UUID /disk2
 ```
 
-### 2.7. Zuerst file in disk1 erstellen, dann unmounten und beobachten
+#### 2.8 Unmount-Verhalten beobachten
+
+Erstelle zunächst eine Datei in `/disk1` und unmounte dann die Partition:
+
 ```bash
 sudo umount /disk1
 ```
 
-Ergebnis: Alle erstellten Dateien in dem Ordner `disk1` verschwinden
+**Ergebnis:** Alle erstellten Dateien im Ordner `disk1` verschwinden, da das Dateisystem nicht mehr eingehängt ist. Die Daten sind aber nicht verloren, sie werden wieder sichtbar, sobald die Partition erneut gemountet wird.
 
-### Dauerhaftes Mounting mit `fstab`
+### 3. Dauerhaftes Mounting mit fstab
 
-Um das Mounting persistent zu machen, müssen wir im ersten Schritt nochmal die UUID der zweiten Partition herausfinden. Diese wird über den Befehl `lsblk -f` angezeigt und sollte kopiert werden.
+Bisheriges Mounting geht beim Neustart verloren. Damit die Partitionen persistent gemountet bleiben, müssen sie in der Datei `/etc/fstab` eingetragen werden. Diese Datei wird beim Systemstart ausgelesen und alle dort definierten Mounts werden automatisch ausgeführt.
 
-Für das persistente Mounting muss anschließend die Datei `/etc/fstab` bearbeitet werden:
+Ermittle zuerst die UUID der zweiten Partition mit `lsblk -f` und kopiere sie.
+
+Bearbeite dann die Datei:
+
 ```bash
 sudo nano /etc/fstab
 ```
 
-Hier müssen jetzt folgende Zeilen verknüpft werden, sodass das Mounting persistent ist.  
+Füge folgende Einträge am Ende hinzu:
 
 ```bash
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
@@ -199,4 +233,17 @@ Hier müssen jetzt folgende Zeilen verknüpft werden, sodass das Mounting persis
 UUID=<YOUR_SDB2_UUID> /disk2    xfs    defaults,nofail 0       2
 ```
 
-Dieses File wird mit dem Befehl `sudo mount -a` gelesen und das Mounting sollte dadurch erfolgen. Nach einem Server-Reboot sollten beide Partitionen noch gemounted sein.
+::: info Mount-Optionen erklärt
+- **`defaults`**: Standardoptionen (`rw`, `suid`, `dev`, `exec`, `auto`, `nouser`, `async`)
+- **`nofail`**: Der Boot-Prozess schlägt nicht fehl, wenn das Volume nicht verfügbar ist
+- **`0`** (dump): Kein Backup durch `dump`
+- **`2`** (pass): Dateisystem-Check nach dem Root-Dateisystem
+:::
+
+Teste die Konfiguration, ohne einen Neustart durchführen zu müssen:
+
+```bash
+sudo mount -a
+```
+
+Dieser Befehl liest die `fstab` und mountet alle dort definierten, noch nicht gemounteten Dateisysteme. Nach einem Server-Reboot sollten beide Partitionen automatisch gemountet sein.
