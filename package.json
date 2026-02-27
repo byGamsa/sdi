@@ -12,7 +12,10 @@
     "vitepress": "^2.0.0-alpha.12"
   },
   "devDependencies": {
-    "markdownlint-cli": "^0.44.0",
+    "markdownlint-cli": "^0.47.0",
     "prettier": "^3.5.2"
+  },
+  "overrides": {
+    "minimatch": "^10.2.4"
   }
 }
