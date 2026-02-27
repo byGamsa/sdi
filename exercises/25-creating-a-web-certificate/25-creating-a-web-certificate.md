@@ -7,13 +7,15 @@ Diese Aufgabe ist also eine Erweiterung der Aufgabe 21, bei der wir uns per SSH 
 
 ### Provider konfigurieren
 
-Zuerst sollten wir den Provider konfigurieren, mit der richtigen URL, die uns in der Aufgabe vorgegeben wurde. Außerdem sollte ``acme`` zusätzlich in der ``provider.tf`` hinzugefügt werden.
+Zuerst sollten wir den Provider konfigurieren, mit der richtigen URL, die uns in der Aufgabe vorgegeben wurde. Außerdem sollte `acme` zusätzlich in der `provider.tf` hinzugefügt werden.
 ::: warning
+
 - Es ist wichtig die Staging-URL zu benutzen, statt der Production-URL, da es strenge Rate-Limits gibt.
-- Bei acme ist es wichtig, eine Version zu benutzen, die neuer als ``v2.23.2`` ist. Wir benutzen die neuste Version.
-:::
+- Bei acme ist es wichtig, eine Version zu benutzen, die neuer als `v2.23.2` ist. Wir benutzen die neuste Version.
+  :::
 
 ::: code-group
+
 ```hcl [provider.tf]
 provider "acme" { // [!code ++:3]
   server_url = "https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -35,13 +37,15 @@ terraform {
   required_version = ">= 0.13"
 }
 ```
+
 :::
 
 Im nächsten Schritt wird ein neuer RSA-Privatschlüssel angelegt, mit dem wir uns anschließend bei Let's Encrypt registrieren. Zudem muss eine neue Variable mit dem Namen email angelegt werden, hier kann eine Email eingetragen werden, auf die man Zugriff hat.
 
 ::: code-group
+
 ```hcl [main.tf]
-resource "tls_private_key" "host_key" { 
+resource "tls_private_key" "host_key" {
   algorithm = "ED25519"
   count = var.serverCount
 }
@@ -56,18 +60,21 @@ resource "acme_registration" "reg" { // [!code ++:4]
 }
 
 ```
+
 ```hcl [variables.tf]
 variable "email" { // [!code ++:4]
   description = "Email address for Let's Encrypt registration"
   type        = string
 }
 ```
+
 :::
 
-Nach der Registrierung des Accounts wird das eigentliche Zertifikat über den Provider Let's Encrypt angefragt. Über die Attribute ``common_name`` und ``subject_alternative_names`` stellen wir sicher, dass das Zertifikat sowohl für alle Subdomains als auch für die Hauptdomain selbst gültig ist. Danach wird eine DNS-Challenge ausgeführt, um das Zertifikat automatisch zu beantragen. 
+Nach der Registrierung des Accounts wird das eigentliche Zertifikat über den Provider Let's Encrypt angefragt. Über die Attribute `common_name` und `subject_alternative_names` stellen wir sicher, dass das Zertifikat sowohl für alle Subdomains als auch für die Hauptdomain selbst gültig ist. Danach wird eine DNS-Challenge ausgeführt, um das Zertifikat automatisch zu beantragen.
 
 ::: code-group
-```hcl [main.tf] 
+
+```hcl [main.tf]
 resource "acme_certificate" "wildcard_cert" {  // [!code ++:17]
   account_key_pem = acme_registration.reg.account_key_pem
   common_name     = "*.${var.dnsZone}"
@@ -75,7 +82,7 @@ resource "acme_certificate" "wildcard_cert" {  // [!code ++:17]
     var.dnsZone,
   ]
 
-  dns_challenge { 
+  dns_challenge {
     provider = "rfc2136"
     config = {
       RFC2136_NAMESERVER     = "ns1.sdi.hdm-stuttgart.cloud"
@@ -86,14 +93,16 @@ resource "acme_certificate" "wildcard_cert" {  // [!code ++:17]
   }
 }
 ```
+
 :::
-Damit wir das generierte Zertifikat später auf unserem Webserver nutzen können, müssen die Daten in physischen Dateien abgelegt werden. Dafür nutzen wir die Terraform-Ressource local_file, welche die Dateien automatisch in dem Unterordner ``gen/`` speichert. Dabei brauchen wir ein privates File, in dem unser private Key abgelegt wird, der nicht an die Öffentlichkeit gelangen darf. Nur mit ihm kann der Server die Anfragen, die mit dem Public Certificate verschlüsselt wurden, wieder entschlüsseln. Das zweite File ist für unser Zertifikat gedacht, direkt mit dem Zertifikat von Let's Encrypt.
+Damit wir das generierte Zertifikat später auf unserem Webserver nutzen können, müssen die Daten in physischen Dateien abgelegt werden. Dafür nutzen wir die Terraform-Ressource local_file, welche die Dateien automatisch in dem Unterordner `gen/` speichert. Dabei brauchen wir ein privates File, in dem unser private Key abgelegt wird, der nicht an die Öffentlichkeit gelangen darf. Nur mit ihm kann der Server die Anfragen, die mit dem Public Certificate verschlüsselt wurden, wieder entschlüsseln. Das zweite File ist für unser Zertifikat gedacht, direkt mit dem Zertifikat von Let's Encrypt.
 
 ::: warning
-Solange der Ordner ``gen`` den private Key enthält, darf er nicht in Git hochgeladen werden!
+Solange der Ordner `gen` den private Key enthält, darf er nicht in Git hochgeladen werden!
 :::
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "local_file" "certificate_pem" { // [!code ++:9]
   content  = "${acme_certificate.wildcard_cert.certificate_pem}${acme_certificate.wildcard_cert.issuer_pem}"
@@ -105,11 +114,13 @@ resource "local_file" "private_key_pem" {
   filename = "gen/private.pem"
 }
 ```
+
 :::
 
-Jetzt müsste die Konfiguration bereits abgeschlossen sein, da allerdings unsere Firewall aktuell nur Port 22 und Port 80 durchlässt, sollten wir noch Port 443 öffnen, um ``https`` zuzulassen.
+Jetzt müsste die Konfiguration bereits abgeschlossen sein, da allerdings unsere Firewall aktuell nur Port 22 und Port 80 durchlässt, sollten wir noch Port 443 öffnen, um `https` zuzulassen.
 ::: code-group
-``` hcl [main.tf]
+
+```hcl [main.tf]
 resource "hcloud_firewall" "fw" {
   name = "firewall-2"
   rule {
@@ -132,13 +143,17 @@ resource "hcloud_firewall" "fw" {
   }
 }
 ```
+
 :::
 
-Nach dem applien kann in dem ``gen/`` Ordner überprüft werden, ob beide Files erfolgreich erstellt wurden. Außerdem kann folgender Befehl im Terminal ausgeführt werden:
+Nach dem applien kann in dem `gen/` Ordner überprüft werden, ob beide Files erfolgreich erstellt wurden. Außerdem kann folgender Befehl im Terminal ausgeführt werden:
+
 ```bash
 openssl x509 -in gen/certificate.pem -text -noout
 ```
+
 Hier kann man den Issuer überprüfen und überprüfen, ob die Domains richtig gesetzt wurden. So sollte der korrekte Issuer in etwa aussehen:
+
 ```
 Issuer: C = US, O = (STAGING) Let's Encrypt, CN = (STAGING) Tenuous Tomato R13
 ```

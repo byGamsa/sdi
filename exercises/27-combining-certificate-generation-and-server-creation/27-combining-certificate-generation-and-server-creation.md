@@ -10,6 +10,7 @@ Bevor an dieser Aufgabe weitergearbeitet wird, sollte überprüft werden, dass i
 
 Um das Zertifikat automatisiert hinzuzufügen, müssen wir unsere Cloud-Init anpassen. Hierbei muss auf die Einrückungen der Zertifikate und des private Keys geachtet werden.
 ::: code-group
+
 ```hcl [main.tf]
 resource "local_file" "user_data" {
   count = var.serverCount
@@ -25,6 +26,7 @@ resource "local_file" "user_data" {
 
 
 ```
+
 ```hcl [tpl/userData.yaml]
 package_update: true
 package_upgrade: true
@@ -59,10 +61,10 @@ write_files: // [!code ++:24]
           listen [::]:80 default_server;
           listen 443 ssl default_server;
           listen [::]:443 ssl default_server;
-                    
+
           ssl_certificate /etc/ssl/certs/certificate.pem;
           ssl_certificate_key /etc/ssl/private/private.key;
-          
+
           root /var/www/html;
           index index.html index.htm index.nginx-debian.html;
       }
@@ -81,16 +83,18 @@ users:
     ssh_authorized_keys:
       - ${sshKey}
 ```
+
 :::
 
-Um zu überprüfen, ob alles erfolgreich geklappt hat, kann die Web-Adresse ``https://g1.sdi.hdm-stuttgart.cloud`` im Browser aufgerufen und überprüft werden. Alternativ kann über den ``curl``- Befehl überprüft werden, ob alles korrekt erreicht werden kann.
+Um zu überprüfen, ob alles erfolgreich geklappt hat, kann die Web-Adresse `https://g1.sdi.hdm-stuttgart.cloud` im Browser aufgerufen und überprüft werden. Alternativ kann über den `curl`- Befehl überprüft werden, ob alles korrekt erreicht werden kann.
+
 ```bash
 curl -k https://g1.sdi.hdm-stuttgart.cloud
 curl -k https://www.g1.sdi.hdm-stuttgart.cloud
 curl -k https://mail.g1.sdi.hdm-stuttgart.cloud
 ```
 
-Zudem kann die Terraform-Konfiguration noch einmal mit der Production-URL ``https://acme-v02.api.letsencrypt.org/directory`` von Let's Encrypt durchgeführt werden, um zu überprüfen, ob alles erfolgreich geklappt hat, indem keine Warnmeldung mehr im Browser angezeigt wird.
+Zudem kann die Terraform-Konfiguration noch einmal mit der Production-URL `https://acme-v02.api.letsencrypt.org/directory` von Let's Encrypt durchgeführt werden, um zu überprüfen, ob alles erfolgreich geklappt hat, indem keine Warnmeldung mehr im Browser angezeigt wird.
 ::: warning
 Hier darf erneut nicht vergessen werden, die URL zurück auf die Staging-URL zu stellen!
 :::

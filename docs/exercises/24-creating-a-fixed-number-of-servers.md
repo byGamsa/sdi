@@ -1,16 +1,32 @@
-# 24. Created a fixed number of servers
+# 24. Feste Anzahl an Servern erstellen
 
-Diese Aufgabe baut auf der Basis von Aufgabe 23 auf.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdiDnsProjectNameServer.html#sdi_cloudProvider_loops_qanda_multiServerGen)
 
-Hier geht es darum, mehrere Server zu konfigurieren, wobei die Anzahl der Server in einer Variablen gespeichert werden.
+In dieser Übung wird die bestehende Konfiguration dynamisch gemacht, sodass eine variable Anzahl an Servern über eine einzige Variable gesteuert wird. Jeder Server erhält seinen eigenen SSH Host Key, eigene Wrapper-Skripte (`bin/ssh`, `bin/scp`), eine individuelle `known_hosts`-Datei und einen eigenen DNS A-Record.
 
-Dabei sollen die Server außerdem auch eigene ssh-host key pairs und eigene ``bin/ssh`` und ``gen/known_hosts`` files besitzen
+## Architektur-Komponenten
 
-### Erstellen einer neuen Variable ``serverCount``
+| Komponente                   | Beschreibung                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| **`count` Meta-Argument**    | Erstellt mehrere Instanzen jeder Ressource basierend auf `serverCount`        |
+| **Dynamische Namensvergabe** | Server werden durchnummeriert (`work-1`, `work-2`, ...)                       |
+| **Individuelle SSH-Keys**    | Jeder Server erhält ein eigenes ED25519-Schlüsselpaar                         |
+| **Individuelle Skripte**     | Pro Server ein eigenes `bin/ssh` und `gen/known_hosts` im eigenen Unterordner |
+| **DNS A-Records**            | Jeder Server bekommt einen eigenen A-Record                                   |
+| **Splat-Expression `[*]`**   | Gibt die Attribute aller Instanzen als Liste aus                              |
 
-Hier wird eine neue Variable ``serverCount`` deklariert und initialisiert
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 23](/exercises/23-creating-host-with-corresponding-dns-entries) auf. Der dort erstellte Code wird so erweitert, dass er mit einer variablen Anzahl an Servern funktioniert.
+
+## Übungsschritte
+
+### 1. Variable `serverCount` erstellen
+
+Deklariere eine neue Variable `serverCount`, die die Anzahl der zu erstellenden Server bestimmt. In der `config.auto.tfvars` wird der Wert gesetzt:
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "serverName" {
   description = "Canonical Name des Servers"
@@ -31,6 +47,7 @@ variable "groupName" {
 }
 
 ```
+
 ```hcl [config.auto.tfvars]
 dnsZone="g1.sdi.hdm-stuttgart.cloud"
 serverName="work"
@@ -39,17 +56,19 @@ groupName="g1"
 loginUser="devops"
 serverCount="2" // [!code ++]
 ```
+
 :::
 
-### Anwendung der neuen Variablen und Implementierung im bestehenden Code
+### 2. Dynamische Konfiguration implementieren
 
-Um die Aufgabe zu lösen, müssen wir den Code von einer statischen Konfiguration in eine dynamische Konfiguration umwandeln, was wir durch das hinzufügen von ``count``-Variablen umsetzen.
+Um die Aufgabe zu lösen, wird der Code von einer statischen in eine dynamische Konfiguration umgewandelt. Das geschieht durch das Hinzufügen von `count` zu allen relevanten Ressourcen. Über `count.index` wird auf den aktuellen Index zugegriffen, und mit `[count.index]` wird auf die jeweilige Instanz referenziert.
 
-Zudem wird der Output angepasst, indem man den Output aller Server (mit ``[*]``) ausgibt.
+Zudem wird der Output angepasst, indem die Expression `[*]` verwendet wird, um die Daten aller Server auszugeben:
 
 ::: code-group
+
 ```hcl [main.tf]
-resource "tls_private_key" "host_key" { 
+resource "tls_private_key" "host_key" {
   algorithm = "ED25519"
   count = var.serverCount // [!code ++]
 }
@@ -74,14 +93,14 @@ resource "local_file" "user_data" {
   filename = "${var.serverName}-${count.index+1}/gen/userData.yml" // [!code ++]
 }
 
-resource "local_file" "known_hosts" { 
+resource "local_file" "known_hosts" {
   count = var.serverCount  // [!code ++]
   content = "${var.serverName}-${count.index + 1}.${var.dnsZone} ${tls_private_key.host_key[count.index].public_key_openssh}"  // [!code ++]
   filename        = "${var.serverName}-${count.index + 1}/gen/known_hosts"  // [!code ++]
   file_permission = "644"
 }
 
-resource "local_file" "ssh_script" { 
+resource "local_file" "ssh_script" {
   count = var.serverCount  // [!code ++]
   content = templatefile("${path.module}/tpl/ssh.sh", {
     devopsUsername = var.loginUser,
@@ -91,7 +110,7 @@ resource "local_file" "ssh_script" {
   file_permission = "755"
 }
 
-resource "local_file" "scp_script" { 
+resource "local_file" "scp_script" {
   count = var.serverCount  // [!code ++]
   content = templatefile("${path.module}/tpl/scp.sh", {
     devopsUsername = var.loginUser,
@@ -109,6 +128,7 @@ resource "dns_a_record_set" "workhorse" {
   addresses = [hcloud_server.helloServer[count.index].ipv4_address] // [!code ++]
 }
 ```
+
 ```hcl [output.tf]
 output "ip_addr" {
   value       = hcloud_server.helloServer[*].ipv4_address // [!code ++]
@@ -120,11 +140,15 @@ output "datacenter" {
   description = "The server's datacenter"
 }
 ```
+
 :::
 
-Da wir den Code von der vorherigen Aufgabe genommen haben, bekommen wir noch eine Fehlermeldung, da die Aliase und die Apex-Domain nicht mehr richig weitergeleitet wird. Hier setzen wir sie nicht mehr auf ``workhouse.g1.sdi.hdm-stuttgart.cloud.``, sondern auf den ersten Server der erstellt wird, also auf ``work-1.g1.sdi.hdm-stuttgart.cloud.``:
+### 3. Aliase und Apex-Domain anpassen
+
+Da wir den Code von der vorherigen Aufgabe übernommen haben, gibt es eine Fehlermeldung: Die Aliase und die Apex-Domain verweisen noch auf den alten Server-Namen (`workhorse`). Da der Name jetzt durchnummeriert ist, müssen die CNAME-Aliase und die Root-Domain auf den **ersten Server** (`work-1`) zeigen:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "null_resource" "dns_root" {
   triggers = {
@@ -156,10 +180,14 @@ resource "dns_cname_record" "aliases" {
 }
 
 ```
+
 :::
 
-Jetzt können wir das Ganze applien und alles sollte korrekt erstellt werden, der Output sollte ungefähr so aussehen:
-```
+### 4. Ergebnis überprüfen
+
+Nach Apply sollte der Output die IP-Adressen und Datacenter beider Server auflisten:
+
+```text
 Outputs:
 
 datacenter = [
@@ -172,16 +200,22 @@ ip_addr = [
 ]
 ```
 
-Zudem können die generierten ssh-Files ausgeführt werden, um zu überprüfen, ob hier alles korrekt geklappt hat.
+Teste die generierten SSH-Skripte für jeden Server:
 
-Außerdem kann erneut der Befehl von Aufgabe 22 und Aufgabe 23 ausgeführt werden:
+```bash
+./work-1/bin/ssh
+./work-2/bin/ssh
+```
+
+Zudem kann der Befehl von Aufgabe 22 und Aufgabe 23 die korrekte Einrichtung bestätigen:
 
 ```bash
 dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
 
-Sollte alles korrekt geklappt haben, sollte die Ausgabe ungefährt so aussehen:
-```
+Sollte alles korrekt geklappt haben, sollte die Ausgabe ungefähr so aussehen:
+
+```text
 g1.sdi.hdm-stuttgart.cloud. 600 IN      SOA     ns1.hdm-stuttgart.cloud. goik\@hdm-stuttgart.de. 85 604800 86400 2419200 604800
 g1.sdi.hdm-stuttgart.cloud. 10  IN      A       37.27.12.32
 g1.sdi.hdm-stuttgart.cloud. 600 IN      NS      ns1.hdm-stuttgart.cloud.
@@ -192,3 +226,7 @@ work-2.g1.sdi.hdm-stuttgart.cloud. 10 IN A      37.27.200.65
 www.g1.sdi.hdm-stuttgart.cloud. 10 IN   CNAME   work-1.g1.sdi.hdm-stuttgart.cloud.
 g1.sdi.hdm-stuttgart.cloud. 600 IN      SOA     ns1.hdm-stuttgart.cloud. goik\@hdm-stuttgart.de. 85 604800 86400 2419200 604800
 ```
+
+::: tip
+Durch Ändern von `serverCount` in der `config.auto.tfvars` können beliebig viele Server erstellt oder entfernt werden. Terraform kümmert sich automatisch um das Erstellen/Löschen der jeweiligen Ressourcen.
+:::
