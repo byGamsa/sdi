@@ -312,14 +312,14 @@ write_files:
 ```
 :::
 
-Zuletzt ist es noch wichtig, das Package ``nginx`` aus unserer Cloud-init-Datei zu entfernen. Erstens brauchen wir hier einen Webserver nicht zwingend, zweitens ist diese Datei sowohl an das Gateway-Host, als auch an den internen Host gebunden. Da der interne Host jedoch kein Internet hat, würde die Ausführung der Datei hier fehlschlagen.
+Zuletzt ist es noch wichtig, das Package ``nginx`` aus und package updates unserer Cloud-init-Datei zu entfernen. Erstens brauchen wir hier einen Webserver nicht zwingend, zweitens ist diese Datei sowohl an das Gateway-Host, als auch an den internen Host gebunden. Da der interne Host jedoch kein Internet hat, würde die Ausführung der Datei hier fehlschlagen.
 
 Als zusätzliche Maßnahme ist es sinnvoll, einen ``depends_on``- Block an beide Server hinzuzufügen, sodass der Server nicht gestartet werden kann, solange die Subnetzmaske nicht erfolgreich erstellt wurde.
 
 ::: code-group
 ```yml [tpl/userData.yml]
 #cloud-config
-package_update: true 
+package_update: true // [!code --:2]
 package_upgrade: true
 
 packages: // [!code --:2]
