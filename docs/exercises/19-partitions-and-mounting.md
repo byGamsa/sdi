@@ -6,12 +6,12 @@ In dieser Übung wird ein externes Block-Storage-Volume an einen Server angebund
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **Hetzner Volume** | 10 GB externer Block-Storage, unabhängig vom Server-Lebenszyklus |
-| **Volume Attachment** | Terraform-Ressource zur Verknüpfung von Volume und Server |
-| **Cloud-Init Workaround** | Löst den Automount-Bug über `udevadm trigger` |
-| **fstab** | Linux-Konfigurationsdatei für persistentes Mounting nach Neustarts |
+| Komponente                | Beschreibung                                                       |
+| ------------------------- | ------------------------------------------------------------------ |
+| **Hetzner Volume**        | 10 GB externer Block-Storage, unabhängig vom Server-Lebenszyklus   |
+| **Volume Attachment**     | Terraform-Ressource zur Verknüpfung von Volume und Server          |
+| **Cloud-Init Workaround** | Löst den Automount-Bug über `udevadm trigger`                      |
+| **fstab**                 | Linux-Konfigurationsdatei für persistentes Mounting nach Neustarts |
 
 ## Codebasis
 
@@ -25,7 +25,7 @@ Zuerst definieren wir das Volume in Terraform und binden es an unseren Server. D
 
 ::: code-group
 
-```sh [main.tf] 
+```sh [main.tf]
 resource "hcloud_volume" "volume01" {
     name      = "volume1"
     size      = 10
@@ -34,13 +34,13 @@ resource "hcloud_volume" "volume01" {
     format    = "xfs"
 }
 
-resource "hcloud_volume_attachment" "volume_attachment" { 
+resource "hcloud_volume_attachment" "volume_attachment" {
   volume_id = hcloud_volume.volume01.id
   server_id = hcloud_server.debian_server.id
 }
 ```
 
-```sh [output.tf] 
+```sh [output.tf]
 output "volume_id" {
     value       = hcloud_volume.volume01.id
     description = "The volume's id"
@@ -50,14 +50,12 @@ output "volume_id" {
 :::
 
 ::: details Der `automount` Bug und Workaround
-Die Automount-Funktion von Hetzner kann gelegentlich fehlschlagen, sodass ein Volume beim ersten Systemstart nicht korrekt eingebunden wird. Eine bewährte Lösung ist es, Cloud-Init zu verwenden, um udev manuell auszulösen. Füge dafür folgendes zur `userData.yml` hinzu: 
+Die Automount-Funktion von Hetzner kann gelegentlich fehlschlagen, sodass ein Volume beim ersten Systemstart nicht korrekt eingebunden wird. Eine bewährte Lösung ist es, Cloud-Init zu verwenden, um udev manuell auszulösen. Füge dafür folgendes zur `userData.yml` hinzu:
 
 ```yml
-runcmd: 
-    // [!code ++:3]
-  - udevadm trigger -c add -s block -p ID_VENDOR=HC --verbose -p ID_MODEL=Volume 
-  - reboot # Ein Neustart ist meist notwendig, damit Automount greift 
-
+runcmd: // [!code ++:3]
+  - udevadm trigger -c add -s block -p ID_VENDOR=HC --verbose -p ID_MODEL=Volume
+  - reboot # Ein Neustart ist meist notwendig, damit Automount greift
 ```
 
 Der Befehl `udevadm trigger` löst die udev-Regeln erneut aus, die für das Erkennen und Einbinden des Volumes zuständig sind. Der anschließende `reboot` stellt sicher, dass alle Systemd-Mount-Units korrekt geladen werden.
@@ -234,11 +232,12 @@ UUID=<YOUR_SDB2_UUID> /disk2    xfs    defaults,nofail 0       2
 ```
 
 ::: info Mount-Optionen erklärt
+
 - **`defaults`**: Standardoptionen (`rw`, `suid`, `dev`, `exec`, `auto`, `nouser`, `async`)
 - **`nofail`**: Der Boot-Prozess schlägt nicht fehl, wenn das Volume nicht verfügbar ist
 - **`0`** (dump): Kein Backup durch `dump`
 - **`2`** (pass): Dateisystem-Check nach dem Root-Dateisystem
-:::
+  :::
 
 Teste die Konfiguration, ohne einen Neustart durchführen zu müssen:
 

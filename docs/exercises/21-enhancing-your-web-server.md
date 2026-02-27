@@ -6,12 +6,12 @@ In dieser Übung wird der bestehende Webserver um DNS-Einträge und TLS-Verschl�
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **DNS Provider** | Terraform-Provider für DNS-Updates über TSIG-Authentifizierung |
-| **A-Record (Root)** | Verknüpft die Hauptdomain mit der Server-IP (über `nsupdate`) |
-| **A-Record (www)** | Verknüpft die `www`-Subdomain mit der Server-IP |
-| **Firewall (Port 443)** | Erlaubt eingehenden HTTPS-Verkehr |
+| Komponente                  | Beschreibung                                                   |
+| --------------------------- | -------------------------------------------------------------- |
+| **DNS Provider**            | Terraform-Provider für DNS-Updates über TSIG-Authentifizierung |
+| **A-Record (Root)**         | Verknüpft die Hauptdomain mit der Server-IP (über `nsupdate`)  |
+| **A-Record (www)**          | Verknüpft die `www`-Subdomain mit der Server-IP                |
+| **Firewall (Port 443)**     | Erlaubt eingehenden HTTPS-Verkehr                              |
 | **Certbot / Let's Encrypt** | Automatische TLS-Zertifikatserstellung und Nginx-Konfiguration |
 
 ## Codebasis
@@ -34,7 +34,7 @@ export HMAC="hmac-sha512:g1.key:<YOUR_SECRET_KEY>"
 dig @ns1.hdm-stuttgart.cloud -y $HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
 
-::: info 
+::: info
 Ein AXFR-Request liefert alle DNS-Einträge einer Zone zurück. Das ist nützlich, um den aktuellen Stand zu überprüfen und sicherzustellen, dass keine Konflikte mit bestehenden Einträgen bestehen.
 :::
 
@@ -43,6 +43,7 @@ Ein AXFR-Request liefert alle DNS-Einträge einer Zone zurück. Das ist nützlic
 Konfiguriere den hashicorp/dns Provider in der `main.tf`. Die Verbindung zum Nameserver `ns1.sdi.hdm-stuttgart.cloud` wird über TSIG-Authentifizierung (HMAC-SHA512) hergestellt:
 
 ::: code-group
+
 ```hcl[main.tf]
 provider "dns" {  // [!code ++:8]
   update {
@@ -53,9 +54,10 @@ provider "dns" {  // [!code ++:8]
   }
 }
 ```
+
 :::
 
-::: warning 
+::: warning
 Der `key_name` muss mit einem Punkt enden (`g1.key.`). Das ist DNS-Standard für vollqualifizierte Domainnamen (FQDN).
 :::
 
@@ -64,6 +66,7 @@ Der `key_name` muss mit einem Punkt enden (`g1.key.`). Das ist DNS-Standard für
 Da der hashicorp/dns Provider keine Root-Zone-Einträge direkt unterstützt, verwenden wir einen alternativen Ansatz. Der Block `triggers` überwacht die Server-IP, ändert sich diese, führt Terraform das Script erneut aus. Über den `local-exec` Provisioner wird das Tool `nsupdate` aufgerufen, das direkt Befehle an den Nameserver sendet:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "null_resource" "dns_root" { // [!code ++:15]
   triggers = {
@@ -80,6 +83,7 @@ resource "null_resource" "dns_root" { // [!code ++:15]
   }
 }
 ```
+
 :::
 
 Das Script löscht zunächst eventuelle alte A-Records für die Domain und setzt dann einen neuen Eintrag mit der aktuellen Server-IP.
@@ -89,14 +93,16 @@ Das Script löscht zunächst eventuelle alte A-Records für die Domain und setzt
 Für klassische Subdomains funktioniert der Terraform-Provider problemlos. Hier erstellen wir einen A-Record für `www`, der ebenfalls auf die IP des Servers verweist:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "dns_a_record_set" "www" { // [!code ++:6]
   name = "www"
-  zone = "g1.sdi.hdm-stuttgart.cloud."      
+  zone = "g1.sdi.hdm-stuttgart.cloud."
   ttl  = 10
   addresses = [hcloud_server.debian_server.ipv4_address]
 }
 ```
+
 :::
 
 ### 5. TLS konfigurieren
@@ -104,6 +110,7 @@ resource "dns_a_record_set" "www" { // [!code ++:6]
 Für HTTPS muss zuerst die Firewall um Port 443 erweitert werden:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "hcloud_firewall" "fw" {
   name = "firewall-1"
@@ -125,8 +132,9 @@ resource "hcloud_firewall" "fw" {
   port      = "443"
   source_ips = ["0.0.0.0/0", "::/0"]
   }
-} 
+}
 ```
+
 :::
 
 Anschließend muss auf den Server zugegriffen und Certbot (der Let's Encrypt Client) samt dem Nginx-Plugin installiert werden:
@@ -143,7 +151,7 @@ sudo certbot --nginx -d g1.sdi.hdm-stuttgart.cloud -d www.g1.sdi.hdm-stuttgart.c
 
 Sollte alles geklappt haben, sollte der Output so aussehen:
 
-```
+```text
 Deploying certificate
 Successfully deployed certificate for g1.sdi.hdm-stuttgart.cloud to /etc/nginx/sites-enabled/default
 Successfully deployed certificate for www.g1.sdi.hdm-stuttgart.cloud to /etc/nginx/sites-enabled/default

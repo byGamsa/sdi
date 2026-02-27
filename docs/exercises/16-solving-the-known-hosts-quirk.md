@@ -6,12 +6,12 @@ Wenn Server bei Hetzner Cloud zerstört und neu erstellt werden, erhalten sie ne
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **TLS Private Key** | Von Terraform generierter ED25519 SSH Host Key |
-| **`gen/known_hosts`** | Eigenes Known-Hosts-File mit dem generierten Public Key |
-| **`bin/ssh` und `bin/scp`** | Wrapper-Skripte, die das eigene Known-Hosts-File verwenden |
-| **Cloud-Init Template** | Übergibt den Private Key an den Server, damit er den richtigen Host Key hat |
+| Komponente                  | Beschreibung                                                                |
+| --------------------------- | --------------------------------------------------------------------------- |
+| **TLS Private Key**         | Von Terraform generierter ED25519 SSH Host Key                              |
+| **`gen/known_hosts`**       | Eigenes Known-Hosts-File mit dem generierten Public Key                     |
+| **`bin/ssh` und `bin/scp`** | Wrapper-Skripte, die das eigene Known-Hosts-File verwenden                  |
+| **Cloud-Init Template**     | Übergibt den Private Key an den Server, damit er den richtigen Host Key hat |
 
 ## Codebasis
 
@@ -24,6 +24,7 @@ Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 15](/exercises/15-working-
 Zuerst erstellen wir im Ordner `tpl` zwei Template-Skripte für SSH und SCP. Diese verwenden die Option `-o UserKnownHostsFile`, um ein eigenes Known-Hosts-File statt des systemweiten `~/.ssh/known_hosts` zu nutzen.
 
 ::: code-group
+
 ```bash [ssh.sh]
 #!/usr/bin/env bash
 
@@ -31,6 +32,7 @@ GEN_DIR=$(dirname "$0")/../gen
 
 ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${devopsUsername}@${ip} "$@"
 ```
+
 ```bash [scp.sh]
 #!/usr/bin/env bash
 
@@ -42,6 +44,7 @@ else
    scp -o UserKnownHostsFile="$GEN_DIR/known_hosts" $@
 fi
 ```
+
 :::
 
 Die Platzhalter `${devopsUsername}` und `${ip}` werden später durch `templatefile()` mit den tatsächlichen Werten ersetzt.
@@ -51,6 +54,7 @@ Die Platzhalter `${devopsUsername}` und `${ip}` werden später durch `templatefi
 Jetzt erstellen wir einen TLS-Schlüssel mit dem ED25519-Algorithmus. Aus dessen öffentlichem Teil und der Server-IP-Adresse wird eine eigene `known_hosts`-Datei zusammengesetzt und im Ordner `gen` abgelegt.
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "tls_private_key" "host_key" { // [!code ++]
   algorithm = "ED25519" // [!code ++]
@@ -66,6 +70,7 @@ resource "local_file" "known_hosts" { // [!code ++]
 } // [!code ++]
 
 ```
+
 :::
 
 ### 3. Ausführbare Skripte generieren
@@ -73,6 +78,7 @@ resource "local_file" "known_hosts" { // [!code ++]
 Aus den Templates müssen noch ausführbare Dateien im Ordner `bin` generiert werden. Der Username wurde ebenfalls als Variable ausgelagert (`var.loginUser`) und muss deshalb ebenfalls angepasst werden:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "local_file" "ssh_script" { //[!code ++]
   content = templatefile("${path.module}/tpl/ssh.sh", {// [!code ++]
@@ -92,7 +98,8 @@ resource "local_file" "scp_script" { //[!code ++]
   file_permission = "755" //[!code ++]
 } //[!code ++]
 ```
-::: 
+
+:::
 
 ### 4. Private Key an Cloud-Init übergeben
 
@@ -101,6 +108,7 @@ Damit der Server auch tatsächlich den von uns generierten Host Key verwendet, m
 Zuletzt muss der Private Key der `userData.yml` hinzugefügt und der SSH-Service neugestartet werden, damit der Key aktiv wird:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "local_file" "user_data" {
   content = templatefile("tpl/userData.yml", {
@@ -108,10 +116,11 @@ resource "local_file" "user_data" {
     sshKey    = chomp(file("~/.ssh/id_ed25519.pub"))
     tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh) //[!code ++]
   })
-  
+
   filename = "gen/userData.yml"
 }
 ```
+
 ```yaml [tpl/userData.yaml]
 #cloud-config
 package_update: true
@@ -124,9 +133,9 @@ ssh_pwauth: false
 disable_root: true
 
 ssh_keys:  //[!code ++:3]
-  ed25519_private: |  
-    ${tls_private_key}   
-    
+  ed25519_private: |
+    ${tls_private_key}
+
 ssh_pwauth: false
 
 runcmd:
@@ -142,6 +151,7 @@ users:
     ssh_authorized_keys:
       - ${sshKey}
 ```
+
 :::
 
 ::: info
@@ -152,12 +162,12 @@ Die Funktion `indent(4, ...)` sorgt dafür, dass der mehrzeilige Private Key kor
 
 Nach `terraform apply` werden folgende Dateien generiert:
 
-| Datei | Beschreibung |
-|---|---|
-| `bin/ssh` | SSH-Wrapper mit eigenem Known-Hosts-File |
-| `bin/scp` | SCP-Wrapper mit eigenem Known-Hosts-File |
-| `gen/known_hosts` | Known-Hosts-Datei mit Server-IP und Public Key |
-| `gen/userData.yml` | Generiertes Cloud-Init Template |
+| Datei              | Beschreibung                                   |
+| ------------------ | ---------------------------------------------- |
+| `bin/ssh`          | SSH-Wrapper mit eigenem Known-Hosts-File       |
+| `bin/scp`          | SCP-Wrapper mit eigenem Known-Hosts-File       |
+| `gen/known_hosts`  | Known-Hosts-Datei mit Server-IP und Public Key |
+| `gen/userData.yml` | Generiertes Cloud-Init Template                |
 
 Verbinde dich mit dem Server über den Wrapper:
 

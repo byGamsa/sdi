@@ -13,16 +13,16 @@ Das Domain Name System (DNS) übersetzt Domainnamen in IP-Adressen. In Kombinati
 
 ### Wichtige Record-Typen
 
-| Record | Beschreibung | Beispiel                         |
-|---|---|----------------------------------|
-| A | Domain → IPv4-Adresse | `workhorse.g3.sdi... → 1.2.3.4`  |
-| AAAA | Domain → IPv6-Adresse | `workhorse.g3.sdi... → 2a01:...` |
-| CNAME | Alias auf eine andere Domain | `www → workhorse.g3.sdi...`      |
-| MX | Mailserver für eine Domain | `mail.example.com`               |
-| TXT | Beliebiger Text (SPF, DKIM) | `v=spf1 ...`                     |
-| NS | Autoritativer Nameserver | `ns1.example.com`                |
-| SOA | Administrative Zone-Informationen | -                                |
-| PTR | Reverse DNS (IP → Name) | `1.2.3.4 → workhorse...`         |
+| Record | Beschreibung                      | Beispiel                         |
+| ------ | --------------------------------- | -------------------------------- |
+| A      | Domain → IPv4-Adresse             | `workhorse.g3.sdi... → 1.2.3.4`  |
+| AAAA   | Domain → IPv6-Adresse             | `workhorse.g3.sdi... → 2a01:...` |
+| CNAME  | Alias auf eine andere Domain      | `www → workhorse.g3.sdi...`      |
+| MX     | Mailserver für eine Domain        | `mail.example.com`               |
+| TXT    | Beliebiger Text (SPF, DKIM)       | `v=spf1 ...`                     |
+| NS     | Autoritativer Nameserver          | `ns1.example.com`                |
+| SOA    | Administrative Zone-Informationen | -                                |
+| PTR    | Reverse DNS (IP → Name)           | `1.2.3.4 → workhorse...`         |
 
 ### Wichtige Begriffe
 
@@ -195,6 +195,7 @@ variable "dns_secret" {
 ```
 
 Die Validierung prüft:
+
 - Keine doppelten Alias-Namen (`distinct`)
 - Kein Alias darf den Server-Namen haben (`contains`)
 

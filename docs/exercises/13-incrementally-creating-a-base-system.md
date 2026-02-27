@@ -6,12 +6,12 @@ In dieser Übung wird eine grundlegende Cloud-Infrastruktur mit Terraform auf He
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **Terraform Konfiguration** | Definiert die gesamte Infrastruktur als Code |
-| **Hetzner Cloud Provider** | Stellt Server-Ressourcen in der Cloud bereit |
-| **Firewall** | Kontrolliert eingehenden Netzwerkverkehr (Port 22 für SSH) |
-| **SSH Key Management** | Ermöglicht sicheren, passwortlosen Zugriff auf den Server |
+| Komponente                  | Beschreibung                                               |
+| --------------------------- | ---------------------------------------------------------- |
+| **Terraform Konfiguration** | Definiert die gesamte Infrastruktur als Code               |
+| **Hetzner Cloud Provider**  | Stellt Server-Ressourcen in der Cloud bereit               |
+| **Firewall**                | Kontrolliert eingehenden Netzwerkverkehr (Port 22 für SSH) |
+| **SSH Key Management**      | Ermöglicht sicheren, passwortlosen Zugriff auf den Server  |
 
 ## Codebasis
 
@@ -50,7 +50,7 @@ Zuerst erstellen wir eine einfache `main.tf` Datei, die einen einzelnen Debian-S
 ::: info
 Diese Basiskonfiguration erstellt einen minimalen Server ohne Sicherheitsfeatures. Der API Token steht hier noch direkt im Code, wird aber im nächsten Schritt verbessert.
 :::
- 
+
 ::: code-group
 
 ```hcl [main.tf]
@@ -75,7 +75,7 @@ resource "hcloud_server" "helloServer" {
 }
 ```
 
-::: 
+:::
 
 ### 4. API Key in eine separate Datei auslagern
 
@@ -84,6 +84,7 @@ In der bisherigen Konfiguration steht der API Token direkt im Code. Das ist ein 
 Erstelle zuerst eine `variables.tf` Datei, die die Variable deklariert:
 
 ::: code-group
+
 ```hcl [variables.tf]
 variable "hcloud_token" {
   description = "Hetzner Cloud API token (can be supplied via environment variable TF_VAR_hcloud_token)"
@@ -93,11 +94,13 @@ variable "hcloud_token" {
 }
 
 ```
+
 :::
 
 Erstelle dann eine `provider.tf` Datei, die den Provider so konfiguriert, dass er die Variable verwendet:
 
 ::: code-group
+
 ```hcl [provider.tf]
 provider "hcloud" {
   token = var.hcloud_token
@@ -112,14 +115,17 @@ terraform {
   required_version = ">= 0.13"
 }
 ```
+
 :::
 
 Erstelle abschließend eine `secret.auto.tfvars` Datei, die den tatsächlichen Token-Wert enthält. Dateien mit der Endung `.auto.tfvars` werden von Terraform automatisch geladen:
 
 ::: code-group
+
 ```hcl [secret.auto.tfvars]
 hcloud_token="YOUR_API_TOKEN"
 ```
+
 :::
 
 ::: warning Sicherheitshinweis
@@ -133,6 +139,7 @@ Ohne Firewall ist der Server über alle Ports aus dem Internet erreichbar. Wir e
 Füge folgende Blöcke in die `main.tf` ein:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "hcloud_server" "helloServer" {
   name         = "hello"
@@ -151,8 +158,8 @@ resource "hcloud_firewall" "sshFw" { // [!code ++]
   } // [!code ++]
 } // [!code ++]
 ```
-:::
 
+:::
 
 ### 6. SSH-Keys hinzufügen
 
@@ -161,6 +168,7 @@ Anstelle von passwortbasiertem Login verwenden wir SSH-Keys für eine sichere Au
 Erstelle eine zweite Variable in `variable.tf`:
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "hcloud_token" {
   description = "Hetzner Cloud API token (can be supplied via environment variable TF_VAR_hcloud_token)"
@@ -176,20 +184,24 @@ variable "ssh_login_public_key" { // [!code ++]
   sensitive = true // [!code ++]
 } // [!code ++]
 ```
+
 :::
 
 Setze den Wert der Variable in der Secrets-Datei:
 
 ::: code-group
+
 ```hcl [secrets.auto.tfvars]
 hcloud_token="YOUR_API_TOKEN"
 ssh_login_public_key="YOUR_PUBLIC_SSK_KEY" // [!code ++]
 ```
+
 :::
 
 Füge eine SSH-Key-Ressource hinzu und referenziere sie im Server-Block. Dadurch wird der öffentliche Schlüssel automatisch auf dem Server hinterlegt:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "hcloud_server" "helloServer" {
   name         = "hello"
@@ -214,6 +226,7 @@ resource "hcloud_ssh_key" "loginUser" { // [!code ++]
   public_key = var.ssh_login_public_key // [!code ++]
 } // [!code ++]
 ```
+
 :::
 
 ### 7. Terraform Output definieren
@@ -223,6 +236,7 @@ Outputs sind ein nützliches Feature von Terraform, um nach `terraform apply` wi
 Erstelle eine neue Datei `output.tf`:
 
 ::: code-group
+
 ```hcl [output.tf]
 output "ip_addr" {
   value       = hcloud_server.helloServer.ipv4_address
@@ -234,6 +248,7 @@ output "datacenter" {
   description = "The server's datacenter"
 }
 ```
+
 :::
 
-Nach `terraform apply` werden die Server-IP und das Datacenter direkt im Terminal ausgegeben. 
+Nach `terraform apply` werden die Server-IP und das Datacenter direkt im Terminal ausgegeben.

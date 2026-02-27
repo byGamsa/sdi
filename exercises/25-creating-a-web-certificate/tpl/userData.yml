@@ -21,7 +21,7 @@ runcmd:
 users:
   - name: ${loginUser}
     groups: sudo
-    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    sudo: 'ALL=(ALL) NOPASSWD:ALL'
     shell: /bin/bash
     ssh_authorized_keys:
       - ${sshKey}

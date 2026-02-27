@@ -8,7 +8,7 @@ Terraform verfolgt einen deklarativen Ansatz: Man beschreibt den gewünschten Zu
 
 ### Warum Terraform?
 
-- **Deklarativ**: Man beschreibt *was* man haben möchte, nicht *wie* es erstellt wird
+- **Deklarativ**: Man beschreibt _was_ man haben möchte, nicht _wie_ es erstellt wird
 - **Provider-Ökosystem**: Unterstützt hunderte Cloud-Anbieter (AWS, Azure, GCP, Hetzner, etc.)
 - **Reproduzierbar**: Gleiche Konfiguration ergibt immer das gleiche Ergebnis
 - **Versionierbar**: Konfigurationsdateien können mit Git verwaltet werden
@@ -78,13 +78,13 @@ terraform -install-autocomplete
 
 Terraform-Konfigurationen werden in `.tf`-Dateien geschrieben und verwenden die HCL-Syntax. Typische Dateien in einem Terraform-Projekt:
 
-| Datei | Zweck |
-|---|---|
-| `main.tf` | Hauptkonfiguration mit Ressourcen |
-| `variables.tf` | Variablen-Definitionen |
-| `outputs.tf` | Ausgabewerte nach dem Apply |
-| `providers.tf` | Provider-Konfiguration |
-| `terraform.tfvars` | Variablen-Werte |
+| Datei              | Zweck                             |
+| ------------------ | --------------------------------- |
+| `main.tf`          | Hauptkonfiguration mit Ressourcen |
+| `variables.tf`     | Variablen-Definitionen            |
+| `outputs.tf`       | Ausgabewerte nach dem Apply       |
+| `providers.tf`     | Provider-Konfiguration            |
+| `terraform.tfvars` | Variablen-Werte                   |
 
 ### Provider
 

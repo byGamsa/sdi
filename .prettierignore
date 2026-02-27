@@ -1,0 +1,11 @@
+node_modules
+dist
+.vitepress/cache
+.vitepress/dist
+package-lock.json
+*.tf
+*.tfvars
+*.tpl
+exercises/**/*.yml
+exercises/**/*.yaml
+exercises/**/*.json

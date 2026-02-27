@@ -6,12 +6,12 @@ In dieser Übung werden DNS-Records vollständig mit Terraform verwaltet. Ausgeh
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **DNS Provider** | Terraform-Provider mit TSIG-Authentifizierung zum Nameserver |
-| **A-Record** | Verknüpft die `workhorse`-Subdomain mit einer IP-Adresse |
-| **Root A-Record** | Verknüpft die Basis-Domain mit einer IP (über `nsupdate`) |
-| **CNAME-Records** | Aliase (`www`, `mail`) für die Hauptdomain |
+| Komponente                | Beschreibung                                                  |
+| ------------------------- | ------------------------------------------------------------- |
+| **DNS Provider**          | Terraform-Provider mit TSIG-Authentifizierung zum Nameserver  |
+| **A-Record**              | Verknüpft die `workhorse`-Subdomain mit einer IP-Adresse      |
+| **Root A-Record**         | Verknüpft die Basis-Domain mit einer IP (über `nsupdate`)     |
+| **CNAME-Records**         | Aliase (`www`, `mail`) für die Hauptdomain                    |
 | **Variablen-Validierung** | `distinct()` und `contains()` verhindern fehlerhafte Eingaben |
 
 ## Codebasis
@@ -34,6 +34,7 @@ export HMAC="g1.key:CCqK..."
 Zuerst definieren wir die Variable `dns_secret` und initialisieren sie. Dieses Secret authentifiziert uns gegenüber dem Nameserver:
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "dns_secret" { // [!code ++:5]
   description = "Secret für DNS"
@@ -41,14 +42,17 @@ variable "dns_secret" { // [!code ++:5]
   nullable    = false
 }
 ```
+
 ```hcl [secrets.auto.tfvars]
 dns_secret="CCqK..." // [!code ++]
 ```
+
 :::
 
 Anschließend erstellen wir eine minimale DNS-Konfiguration in der `main.tf` mit dem DNS-Provider, einem A-Record für die `workhorse`-Subdomain und einem Root-Domain-Eintrag über `nsupdate`. Eine ähnliche Konfiguration wurde bereits in der letzten Aufgabe verwendet:
 
 ::: code-group
+
 ```hcl [main.tf]
 provider "dns" { // [!code ++:30]
   update {
@@ -81,6 +85,7 @@ resource "null_resource" "dns_root" {
   }
 }
 ```
+
 :::
 
 Führe die Konfiguration aus:
@@ -102,6 +107,7 @@ dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart
 Im nächsten Schritt erstellen wir CNAME-Records für `www` und `mail`. Über `count` wird die Ressource mehrfach erstellt, einmal pro Alias:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "dns_cname_record" "aliases" { // [!code ++:8]
   count = length(["www", "mail"])
@@ -112,6 +118,7 @@ resource "dns_cname_record" "aliases" { // [!code ++:8]
   cname = "workhorse.g1.sdi.hdm-stuttgart.cloud."
 }
 ```
+
 :::
 
 Dies kann erneut ausgeführt werden. Anschließend kann wieder getestet werden, ob soweit alles geklappt hat:
@@ -122,7 +129,7 @@ dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart
 
 Sollten folgende Zeilen angezeigt werden, hat soweit alles funktioniert:
 
-```
+```text
 mail.g1.sdi.hdm-stuttgart.cloud. 10 IN  CNAME   workhorse.g1.sdi.hdm-stuttgart.cloud.
 www.g1.sdi.hdm-stuttgart.cloud. 10 IN   CNAME   workhorse.g1.sdi.hdm-stuttgart.cloud.
 ```
@@ -134,6 +141,7 @@ Da wir bisher mit wenigen Variablen gearbeitet haben, definieren wir jetzt alle 
 Wir erstellen ein neues File `config.auto.tfvars`, in dem die Variablen initialisiert werden:
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "dns_secret" {
   description = "Secret für DNS"
@@ -172,6 +180,7 @@ variable "serverAliases" {
   nullable    = false
 }
 ```
+
 ```hcl [config.auto.tfvars]
 serverIp="1.2.3.4" // [!code ++:5]
 dnsZone="g1.sdi.hdm-stuttgart.cloud"
@@ -179,11 +188,13 @@ serverName="workhorse"
 serverAliases=["www", "mail"]
 groupName="g1"
 ```
+
 :::
 
 Anschließend müssen die Variablen in der `main.tf` eingesetzt werden, um die hartcodierten Strings zu ersetzen:
 
 ::: code-group
+
 ```hcl [main.tf]
 provider "dns" {
   update {
@@ -208,10 +219,10 @@ resource "null_resource" "dns_root" {
 
   provisioner "local-exec" {
     command = <<-EOT // [!code ++:5]
-      echo "server ns1.sdi.hdm-stuttgart.cloud 
-      update delete ${var.dnsZone}. A 
-      update add ${var.dnsZone}. 10 A ${var.serverIp} 
-      send" | nsupdate -y "hmac-sha512:${var.groupName}.key:${var.dns_secret}" 
+      echo "server ns1.sdi.hdm-stuttgart.cloud
+      update delete ${var.dnsZone}. A
+      update add ${var.dnsZone}. 10 A ${var.serverIp}
+      send" | nsupdate -y "hmac-sha512:${var.groupName}.key:${var.dns_secret}"
     EOT
   }
 }
@@ -224,6 +235,7 @@ resource "dns_cname_record" "aliases" {
   cname = "${var.serverName}.${var.dnsZone}." // [!code ++]
 }
 ```
+
 :::
 
 Sollte alles korrekt implementiert worden sein, können die Änderungen erneut applied und getestet werden.
@@ -232,15 +244,16 @@ Sollte alles korrekt implementiert worden sein, können die Änderungen erneut a
 
 Zuletzt müssen noch passende Validierungen erstellt werden, damit es nicht zu Konflikten kommen kann. Dabei werden drei wichtige Fehlerquellen überprüft:
 
-| Validierung | Prüft | Terraform-Funktion |
-|---|---|---|
-| Duplikate | Gibt es bei den Aliasen doppelte Einträge? | `distinct()` |
-| Zone Apex | Ist ein CNAME-Record auf `@` gesetzt? | `contains()` |
-| Namenskollision | Überschneidet sich der Server-Name mit einem Alias? | `contains()` |
+| Validierung     | Prüft                                               | Terraform-Funktion |
+| --------------- | --------------------------------------------------- | ------------------ |
+| Duplikate       | Gibt es bei den Aliasen doppelte Einträge?          | `distinct()`       |
+| Zone Apex       | Ist ein CNAME-Record auf `@` gesetzt?               | `contains()`       |
+| Namenskollision | Überschneidet sich der Server-Name mit einem Alias? | `contains()`       |
 
 Hierfür müssen die `main.tf` und die `variable.tf` erweitert werden:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "dns_cname_record" "aliases" {
   count = length(var.serverAliases)
@@ -256,13 +269,14 @@ resource "dns_cname_record" "aliases" {
   }
 }
 ```
+
 ```hcl [variable.tf]
 variable "serverAliases" {
   description = "Liste der Alias-Namen"
   type        = list(string)
   default     = ["www", "mail"]
   nullable    = false
-  
+
   validation { // [!code ++:9]
     condition     = length(var.serverAliases) == length(distinct(var.serverAliases))
     error_message = "Die Liste 'serverAliases' darf keine doppelten Einträge enthalten."
@@ -274,7 +288,8 @@ variable "serverAliases" {
   }
 }
 ```
-::: 
+
+:::
 
 ### 5. Abschlusstest
 
@@ -286,7 +301,7 @@ dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart
 
 Falls alles erfolgreich geklappt hat, sollte der Output ungefähr so aussehen:
 
-```
+```text
 g1.sdi.hdm-stuttgart.cloud. 600 IN      SOA     ns1.hdm-stuttgart.cloud. goik\@hdm-stuttgart.de. 54 604800 86400 2419200 604800
 g1.sdi.hdm-stuttgart.cloud. 10  IN      A       1.2.3.4
 g1.sdi.hdm-stuttgart.cloud. 600 IN      NS      ns1.hdm-stuttgart.cloud.

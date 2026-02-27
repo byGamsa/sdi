@@ -2,15 +2,15 @@
 
 Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleHostMetaGen)
 
-In dieser Übung wird ein wiederverwendbares Terraform-Submodul `HostMetaData` erstellt. Dieses Modul nimmt die Daten eines Servers entgegen und erzeugt daraus eine JSON-Datei mit Hostmetadaten (IPv4, IPv6, Location). 
+In dieser Übung wird ein wiederverwendbares Terraform-Submodul `HostMetaData` erstellt. Dieses Modul nimmt die Daten eines Servers entgegen und erzeugt daraus eine JSON-Datei mit Hostmetadaten (IPv4, IPv6, Location).
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
+| Komponente                           | Beschreibung                                                    |
+| ------------------------------------ | --------------------------------------------------------------- |
 | **Terraform Modul `host-meta-data`** | Wiederverwendbares Submodul mit eigenen Variablen und Templates |
-| **JSON Template** | Template-Datei für die strukturierte Ausgabe der Hostdaten |
-| **Modul-Einbindung** | Das Hauptprojekt verwendet das Modul über den `module`-Block |
+| **JSON Template**                    | Template-Datei für die strukturierte Ausgabe der Hostdaten      |
+| **Modul-Einbindung**                 | Das Hauptprojekt verwendet das Modul über den `module`-Block    |
 
 ## Codebasis
 
@@ -33,7 +33,7 @@ Zuerst müssen die Dateien neu organisiert werden. Erstelle einen neuen `modules
     └── host-meta-data/
         ├── main.tf
         ├── variables.tf
-        └── tpl/ 
+        └── tpl/
             └── hostdata.json
 ```
 
@@ -93,7 +93,7 @@ resource "local_file" "host_data" {
 }
 ```
 
-::: tip 
+::: tip
 Die Variable `path.module` zeigt immer auf das Verzeichnis des aktuellen Moduls. Das stellt sicher, dass die Template-Datei relativ zum Modul gefunden wird und unabhängig davon, von wo aus das Modul aufgerufen wird.
 :::
 
@@ -127,4 +127,4 @@ Nach erfolgreicher Ausführung mit `terraform apply` erzeugt das Submodul im Ver
   },
   "location": "hel1"
 }
-``` 
+```

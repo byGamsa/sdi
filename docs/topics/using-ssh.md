@@ -21,6 +21,7 @@ Passwortbasierte Logins sind anfällig für Brute-Force-Angriffe. Die sicherere 
 ## SSH Key Pair erstellen
 
 Ein SSH Key Pair besteht aus zwei Dateien:
+
 - **Private Key** (`~/.ssh/id_ed25519`): geheim halten, niemals teilen
 - **Public Key** (`~/.ssh/id_ed25519.pub`): kann frei weitergegeben werden (z.B. an Server, GitHub, GitLab)
 
@@ -66,7 +67,7 @@ ssh-keygen -l -f ~/.ssh/id_ed25519.pub
 
 ## SSH Agent
 
-### Das Problem
+### Das Problem: Ständige Passphrase-Eingabe
 
 Mit Passphrase-geschützten Keys muss man bei jeder SSH-Verbindung die Passphrase erneut eingeben. Bei mehreren Verbindungen pro Session wird das schnell lästig:
 
@@ -100,19 +101,21 @@ ssh root@server2    # Keine Passphrase nötig
 
 ::: tip
 Prüfe, ob der ssh-agent läuft:
+
 ```bash
 printenv | grep SSH_AUTH_SOCK
 ```
+
 Wenn eine Ausgabe wie `SSH_AUTH_SOCK=/run/user/.../ssh` erscheint, ist der Agent aktiv.
 :::
 
 ## Agent Forwarding
 
-### Das Problem
+### Das Problem: Zugriff von entfernten Servern
 
 Man ist per SSH auf Server A eingeloggt und möchte von dort aus per SSH auf Server B zugreifen, ohne den Private Key auf Server A ablegen zu müssen:
 
-```
+```text
 Lokal → Server A → Server B
                     ✗ Kein Zugriff (kein Key auf Server A)
 ```
@@ -131,7 +134,7 @@ ssh root@SERVER_B    # Funktioniert!
 
 Die `-A` Flag aktiviert das Forwarding. Man kann dies auch dauerhaft in der SSH Config setzen:
 
-```
+```ssh
 Host server_a
     HostName DEINE_SERVER_IP
     User root
@@ -146,7 +149,7 @@ Agent Forwarding sollte nur bei vertrauenswürdigen Servern aktiviert werden. Ei
 
 Die Datei `~/.ssh/config` ermöglicht es, häufig genutzte Verbindungen als Shortcuts zu definieren:
 
-```
+```ssh
 Host meinserver
     HostName 95.216.187.60
     User root
@@ -236,7 +239,7 @@ scp -r verzeichnis/ root@SERVER:/pfad/
 
 ```bash
 rsync -avz -e ssh ./lokaler_ordner/ root@SERVER:/remote/pfad/
-``` 
+```
 
 ## Weiterführende Links
 

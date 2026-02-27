@@ -2,9 +2,17 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "lint": "npm run lint:md",
+    "lint:md": "markdownlint \"docs/**/*.md\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "vitepress": "^2.0.0-alpha.12"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.44.0",
+    "prettier": "^3.5.2"
   }
 }

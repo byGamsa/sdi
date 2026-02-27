@@ -6,12 +6,12 @@ In dieser Übung wird die bestehende Server-Konfiguration schrittweise zu einer 
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **Terraform Konfiguration** | Definiert die Infrastruktur und rendert das Cloud-Init Template |
+| Komponente                               | Beschreibung                                                            |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| **Terraform Konfiguration**              | Definiert die Infrastruktur und rendert das Cloud-Init Template         |
 | **Cloud-Init Template (`userData.yml`)** | YAML-basierte Serverkonfiguration, die beim ersten Boot ausgeführt wird |
-| **`templatefile()` Funktion** | Terraform-Funktion, die Variablen in das Template einsetzt |
-| **Firewall** | Erweitert um SSH-Zugriff (Port 22) zusätzlich zu HTTP (Port 80) |
+| **`templatefile()` Funktion**            | Terraform-Funktion, die Variablen in das Template einsetzt              |
+| **Firewall**                             | Erweitert um SSH-Zugriff (Port 22) zusätzlich zu HTTP (Port 80)         |
 
 ## Codebasis
 
@@ -28,10 +28,10 @@ Dafür wird die bisherige Firewall-Ressource umbenannt und um eine zweite Regel 
 ```hcl
 resource "hcloud_firewall" "fw" { // [!code ++]
 resource "hcloud_firewall" "httpFw" { // [!code --]
-  name = "firewall-2" 
-  rule { 
-    direction = "in" 
-    protocol  = "tcp" 
+  name = "firewall-2"
+  rule {
+    direction = "in"
+    protocol  = "tcp"
     port      = "80"
     source_ips = ["0.0.0.0/0", "::/0"]
   } // [!code ++]
@@ -67,6 +67,7 @@ user_data = file("init.sh")
 ```
 
 Diese Methode hat mehrere Nachteile:
+
 - **Keine Variablen**: Alle Werte müssen hartcodiert werden
 - **Schwer erweiterbar**: Komplexe Konfigurationen werden schnell unübersichtlich
 - **Nicht deklarativ**: Shell-Scripts sind imperativ, Cloud-Init ist deklarativ
@@ -76,6 +77,7 @@ Stattdessen verwenden wir ein Cloud-Init YAML-Template, das über `templatefile(
 Erstelle eine Vorlage unter `tpl/userData.yml` und passe die `main.tf` entsprechend an:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "hcloud_server" "helloServer" {
   name         = "hello"
@@ -95,7 +97,6 @@ resource "local_file" "user_data" { // [!code ++]
   filename = "gen/userData.yml" // [!code ++]
 } // [!code ++]
 ```
-
 
 ```yaml [tpl/userData.yml]
 #cloud-config
@@ -124,8 +125,9 @@ users:
 
 package_update: true
 package_upgrade: true
-``` 
-::: 
+```
+
+:::
 
 Die `local_file` Ressource rendert das Template und schreibt das Ergebnis nach `gen/userData.yml`. Das hat den Vorteil, dass man die generierte Datei inspizieren und debuggen kann.
 
@@ -133,13 +135,13 @@ Die `local_file` Ressource rendert das Template und schreibt das Ergebnis nach `
 
 Nach `terraform apply` kann das Setup mit folgenden Befehlen überprüft werden:
 
-| Befehl | Erwartetes Ergebnis |
-|---|---|
-| `ssh root@<SERVER_IP>` | Zugriff sollte **verweigert** werden |
-| `ssh -v devops@<SERVER_IP>` | SSH-Zugriff als `devops` Benutzer |
-| `journalctl -f` | Cloud-Init Logs anzeigen |
-| `apt list --upgradable` | Sollte leer sein (alle Updates installiert) |
-| `systemctl status nginx` | Nginx sollte aktiv sein |
+| Befehl                      | Erwartetes Ergebnis                         |
+| --------------------------- | ------------------------------------------- |
+| `ssh root@<SERVER_IP>`      | Zugriff sollte **verweigert** werden        |
+| `ssh -v devops@<SERVER_IP>` | SSH-Zugriff als `devops` Benutzer           |
+| `journalctl -f`             | Cloud-Init Logs anzeigen                    |
+| `apt list --upgradable`     | Sollte leer sein (alle Updates installiert) |
+| `systemctl status nginx`    | Nginx sollte aktiv sein                     |
 
 ### 3. Cloud-Init Konfiguration erweitern
 

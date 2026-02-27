@@ -6,12 +6,12 @@ In dieser Übung wird das Volume-Mounting weiter automatisiert und verbessert. S
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **Location Variable** | Stellt sicher, dass Server und Volume am gleichen Standort (z.B. `nbg1`) erstellt werden |
-| **Volume Attachment** | Entkoppelte Verbindung von Volume und Server (ohne Automount) |
-| **Cloud-Init Template** | Automatisiert das Erstellen des Mount-Punkts und den fstab-Eintrag |
-| **fstab Automation** | Persistentes Mounting über Cloud-Init statt manueller Konfiguration |
+| Komponente              | Beschreibung                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| **Location Variable**   | Stellt sicher, dass Server und Volume am gleichen Standort (z.B. `nbg1`) erstellt werden |
+| **Volume Attachment**   | Entkoppelte Verbindung von Volume und Server (ohne Automount)                            |
+| **Cloud-Init Template** | Automatisiert das Erstellen des Mount-Punkts und den fstab-Eintrag                       |
+| **fstab Automation**    | Persistentes Mounting über Cloud-Init statt manueller Konfiguration                      |
 
 ## Codebasis
 
@@ -24,6 +24,7 @@ Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 19](/exercises/19-partitio
 Server und Volume müssen im gleichen Hetzner-Rechenzentrum liegen, damit sie miteinander verbunden werden können. Über eine gemeinsame Variable stellen wir das sicher:
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "server_location" { // [!code ++:6]
   description = "Location of the server"
@@ -32,6 +33,7 @@ variable "server_location" { // [!code ++:6]
   default     = "nbg1"
 }
 ```
+
 ```hcl [main.tf]
 resource "hcloud_server" "debian_server" {
   name         = "debian-server"
@@ -51,6 +53,7 @@ resource "hcloud_volume" "volume01" {
   format    = "xfs"
 }
 ```
+
 :::
 
 ::: info
@@ -64,21 +67,23 @@ Im vorherigen Schritt war das Volume direkt an den Server gebunden (`server_id` 
 Außerdem deaktivieren wir `automount`, damit Cloud-Init den Mountpunkt selbst konfiguriert:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "hcloud_volume" "volume01" {
   name      = "volume1"
   size      = 10
   server_id = hcloud_server.debian_server.id // [!code --]
-  location = var.server_location 
+  location = var.server_location
   automount = true // [!code --]
   format    = "xfs"
 }
-resource "hcloud_volume_attachment" "volume_attachment" { 
+resource "hcloud_volume_attachment" "volume_attachment" {
   volume_id = hcloud_volume.volume01.id
   server_id = hcloud_server.debian_server.id
   automount = false // [!code ++]
 }
 ```
+
 :::
 
 ::: info
@@ -90,6 +95,7 @@ Durch die Entkopplung kann das Volume den Server überleben. Wenn du den Server 
 Jetzt automatisieren wir den gesamten Mount-Prozess über Cloud-Init. Dafür übergeben wir den Volume-Namen und den Device-Pfad als Variablen an das Template. Cloud-Init erstellt dann den Mountpunkt `/volume01`, trägt ihn in `/etc/fstab` ein und führt `mount -a` aus:
 
 ::: code-group
+
 ```hcl [main.tf]
 resource "local_file" "user_data" {
   content = templatefile("tpl/userData.yml", {
@@ -101,6 +107,7 @@ resource "local_file" "user_data" {
   })
   filename = "gen/userData.yml"
 ```
+
 ```hcl [tpl/userData.yml]
 runcmd:
   - systemctl start nginx
@@ -112,4 +119,5 @@ runcmd:
   - mount -a // [!code ++]
   - reboot
 ```
-::: 
+
+:::

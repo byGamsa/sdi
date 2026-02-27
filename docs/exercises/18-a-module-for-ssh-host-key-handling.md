@@ -2,16 +2,16 @@
 
 Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_modules.html#sdi_cloudProvider_modules_qanda_moduleFileGen)
 
-In dieser Übung wird die SSH-Host-Key-Logik aus [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) in ein wiederverwendbares Terraform-Modul `SshKnownHosts` ausgelagert. Das Modul generiert die SSH- und SCP-Wrapper-Skripte sowie die `known_hosts`-Datei automatisch. 
+In dieser Übung wird die SSH-Host-Key-Logik aus [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) in ein wiederverwendbares Terraform-Modul `SshKnownHosts` ausgelagert. Das Modul generiert die SSH- und SCP-Wrapper-Skripte sowie die `known_hosts`-Datei automatisch.
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **Terraform Modul `ssh-known-hosts`** | Wiederverwendbares Submodul für SSH-Verbindungsmanagement |
-| **Template-Dateien** | `ssh.sh` und `scp.sh` Wrapper-Skripte als Templates |
-| **`locals` Block** | Entscheidet automatisch, ob Hostname oder IP verwendet wird |
-| **Modul-Einbindung** | Das Hauptprojekt übergibt den Public Key und die Server-Adresse |
+| Komponente                            | Beschreibung                                                    |
+| ------------------------------------- | --------------------------------------------------------------- |
+| **Terraform Modul `ssh-known-hosts`** | Wiederverwendbares Submodul für SSH-Verbindungsmanagement       |
+| **Template-Dateien**                  | `ssh.sh` und `scp.sh` Wrapper-Skripte als Templates             |
+| **`locals` Block**                    | Entscheidet automatisch, ob Hostname oder IP verwendet wird     |
+| **Modul-Einbindung**                  | Das Hauptprojekt übergibt den Public Key und die Server-Adresse |
 
 ## Codebasis
 
@@ -30,12 +30,12 @@ Wie in der letzten Aufgabe verwenden wir erneut den `modules` Ordner, in welchem
 │   ├── variables.tf
 │   └── providers.tf
 │   └── ...
-└── modules/  
+└── modules/
     └── host-meta-data/
     └── ssh-known-hosts/ # [!code ++:7]
         ├── main.tf
         ├── variables.tf
-        └── tpl/ 
+        └── tpl/
             ├── scp.sh
             └── ssh.sh
 ```
@@ -72,7 +72,7 @@ ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${user}@${ip} "$@"
 
 #### 3.1 Variablen (`variables.tf`)
 
-Definiere die Eingangsvariablen des Moduls. 
+Definiere die Eingangsvariablen des Moduls.
 
 ```hcl
 variable "login_user" {
@@ -122,7 +122,7 @@ resource "local_file" "ssh_script" {
     host = local.target_host
     user = var.login_user
   })
-  filename        = "bin/ssh_${local.target_host}" 
+  filename        = "bin/ssh_${local.target_host}"
 }
 
 resource "local_file" "scp_script" {
@@ -130,16 +130,16 @@ resource "local_file" "scp_script" {
     host = local.target_host,
     user = var.login_user
   })
-  filename        = "bin/scp_${local.target_host}" 
+  filename        = "bin/scp_${local.target_host}"
 }
 ```
 
 Damit liegen nach `terraform apply` drei generierte Dateien im Projekt:
 
-| Datei | Beschreibung |
-|---|---|
-| `bin/ssh_<host>` | SSH-Wrapper für den spezifischen Server |
-| `bin/scp_<host>` | SCP-Wrapper für den spezifischen Server |
+| Datei                    | Beschreibung                                  |
+| ------------------------ | --------------------------------------------- |
+| `bin/ssh_<host>`         | SSH-Wrapper für den spezifischen Server       |
+| `bin/scp_<host>`         | SCP-Wrapper für den spezifischen Server       |
 | `gen/known_hosts_<host>` | Known-Hosts-Datei für den spezifischen Server |
 
 ### 4. Submodul im Parent-Projekt einbinden
@@ -152,7 +152,7 @@ module "ssh_wrapper" { # [!code ++:7]
   login_user  = var.login_user
   ipv4Address = hcloud_server.debian_server.ipv4_address
   public_key  = file("~/.ssh/id_ed25519.pub")
-} 
+}
 ```
 
 ::: info

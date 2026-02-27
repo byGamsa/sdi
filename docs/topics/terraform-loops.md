@@ -19,7 +19,7 @@ resource "hcloud_server" "server" {
 
 Terraform erstellt drei Server mit den Namen `web-0`, `web-1` und `web-2`. Der Index beginnt immer bei 0.
 
-### Auf Instanzen zugreifen
+### Auf Instanzen zugreifen (count)
 
 Ressourcen mit `count` werden als Liste referenziert:
 
@@ -143,7 +143,7 @@ resource "hcloud_server" "server" {
 }
 ```
 
-### Auf Instanzen zugreifen
+### Auf Instanzen zugreifen (for_each)
 
 ```hcl
 # Einzelne Instanz über den Key
@@ -180,17 +180,18 @@ output "large_servers" {
 
 ## count vs. for_each
 
-| Eigenschaft | count | for_each |
-|---|---|---|
-| Identifikation | Index (0, 1, 2...) | Key (Name) |
-| Reihenfolge wichtig | Ja | Nein |
-| Element entfernen | Verschiebt Indizes | Nur betroffene Ressource |
-| Eingabe | Zahl | Map oder Set |
+| Eigenschaft         | count              | for_each                 |
+| ------------------- | ------------------ | ------------------------ |
+| Identifikation      | Index (0, 1, 2...) | Key (Name)               |
+| Reihenfolge wichtig | Ja                 | Nein                     |
+| Element entfernen   | Verschiebt Indizes | Nur betroffene Ressource |
+| Eingabe             | Zahl               | Map oder Set             |
 
 ::: tip Wann was verwenden?
+
 - **count**: Wenn man eine bestimmte Anzahl identischer Ressourcen braucht
 - **for_each**: Wenn jede Ressource unterschiedliche Konfigurationen hat oder wenn Ressourcen stabil referenziert werden sollen
-:::
+  :::
 
 ## Weiterführende Links
 

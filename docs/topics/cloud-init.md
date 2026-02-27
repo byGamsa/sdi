@@ -86,7 +86,7 @@ users:
   - name: devops
     groups: [sudo]
     shell: /bin/bash
-    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
       - ssh-ed25519 AAAAC3... user@example.com
 ```
@@ -98,7 +98,7 @@ Dateien auf dem Server erstellen:
 ```yaml
 write_files:
   - path: /etc/motd
-    permissions: "0644"
+    permissions: '0644'
     content: |
       Willkommen auf diesem Server!
       Konfiguriert mit Cloud-init.
@@ -183,7 +183,7 @@ users:
   - name: ${login_user}
     groups: [sudo]
     shell: /bin/bash
-    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
       - ${public_key}
 ```

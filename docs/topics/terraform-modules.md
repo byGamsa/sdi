@@ -17,7 +17,7 @@ Ein Modul ist im Grunde ein Verzeichnis mit `.tf`-Dateien. Jedes Terraform-Proje
 
 Ein typisches Modul besteht aus drei Dateien:
 
-```
+```text
 modules/
 └── mein-modul/
     ├── main.tf          # Ressourcen-Definitionen
@@ -140,19 +140,19 @@ module "webserver" {
 
 Module können aus verschiedenen Quellen geladen werden:
 
-| Quelle | Beispiel |
-|---|---|
-| Lokaler Pfad | `source = "./modules/server"` |
-| Terraform Registry | `source = "hetznercloud/network/hcloud"` |
-| GitHub | `source = "github.com/org/repo//module"` |
-| Git | `source = "git::https://example.com/repo.git"` |
-| HTTP URL | `source = "https://example.com/module.zip"` |
+| Quelle             | Beispiel                                       |
+| ------------------ | ---------------------------------------------- |
+| Lokaler Pfad       | `source = "./modules/server"`                  |
+| Terraform Registry | `source = "hetznercloud/network/hcloud"`       |
+| GitHub             | `source = "github.com/org/repo//module"`       |
+| Git                | `source = "git::https://example.com/repo.git"` |
+| HTTP URL           | `source = "https://example.com/module.zip"`    |
 
 ## Projektstruktur mit Modulen
 
 Ein typisches Projekt mit Modulen sieht so aus:
 
-```
+```text
 .
 ├── exercise/
 │   ├── main.tf

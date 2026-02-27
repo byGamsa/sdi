@@ -27,11 +27,11 @@ lsblk
 
 Bevor ein Volume genutzt werden kann, muss ein Dateisystem darauf erstellt werden:
 
-| Dateisystem | Beschreibung |
-|---|---|
-| ext4 | Standard-Linux-Dateisystem mit Journaling |
-| XFS | Hochperformant, besonders für große Dateien |
-| Btrfs | Erweiterte Features wie Snapshots und RAID |
+| Dateisystem | Beschreibung                                |
+| ----------- | ------------------------------------------- |
+| ext4        | Standard-Linux-Dateisystem mit Journaling   |
+| XFS         | Hochperformant, besonders für große Dateien |
+| Btrfs       | Erweiterte Features wie Snapshots und RAID  |
 
 ```bash
 # ext4 Dateisystem erstellen
@@ -61,12 +61,12 @@ sudo umount /disk1
 
 Typische Mount Points:
 
-| Pfad | Verwendung |
-|---|---|
-| `/mnt` | Temporäre Mount Points |
-| `/media` | Wechselmedien |
-| `/var` | Variable Daten |
-| `/home` | Benutzerverzeichnisse |
+| Pfad     | Verwendung             |
+| -------- | ---------------------- |
+| `/mnt`   | Temporäre Mount Points |
+| `/media` | Wechselmedien          |
+| `/var`   | Variable Daten         |
+| `/home`  | Benutzerverzeichnisse  |
 
 ### Partitionierung
 
@@ -77,6 +77,7 @@ sudo fdisk /dev/sdb
 ```
 
 Innerhalb von `fdisk`:
+
 - `n`: Neue Partition erstellen
 - `p`: Partitionstabelle anzeigen
 - `w`: Änderungen schreiben und beenden
@@ -97,9 +98,11 @@ UUID=<DEINE_SDB2_UUID>     /disk2         xfs     defaults,nofail  0       2
 
 ::: tip UUID statt Device-Name
 UUIDs sind stabiler als Device-Namen (`/dev/sdb1`), da sich Letztere nach einem Neustart ändern können. UUID ermitteln mit:
+
 ```bash
 blkid /dev/sdb2
 ```
+
 :::
 
 Konfiguration testen ohne Neustart:
@@ -110,11 +113,11 @@ sudo mount -a
 
 ### Mount-Optionen
 
-| Option | Bedeutung |
-|---|---|
+| Option     | Bedeutung                                                   |
+| ---------- | ----------------------------------------------------------- |
 | `defaults` | Standardoptionen (rw, suid, dev, exec, auto, nouser, async) |
-| `nofail` | System bootet auch wenn das Volume nicht verfügbar ist |
-| `discard` | Aktiviert TRIM-Support für SSDs |
+| `nofail`   | System bootet auch wenn das Volume nicht verfügbar ist      |
+| `discard`  | Aktiviert TRIM-Support für SSDs                             |
 
 ## Volumes mit Terraform
 

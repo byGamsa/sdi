@@ -29,11 +29,11 @@ Bevor du einen Server erstellst, solltest du eine Firewall anlegen, um den Zugri
    - **Name**: z.B. `ssh-access`
    - **Inbound Rule**: SSH-Zugriff erlauben
 
-| IP-Version | Protokoll | Port |
-|---|---|---|
-| Any IPv4 / Any IPv6 | TCP | 22 |
+| IP-Version          | Protokoll | Port |
+| ------------------- | --------- | ---- |
+| Any IPv4 / Any IPv6 | TCP       | 22   |
 
-4. Klicke auf **„Firewall erstellen"**.
+1. Klicke auf **„Firewall erstellen"**.
 
 ## Server erstellen
 
@@ -72,7 +72,7 @@ ssh root@DEINE_SERVER_IP
 
 Beim ersten Verbindungsaufbau erscheint folgende Meldung:
 
-```
+```text
 The authenticity of host '95.216.187.60 (95.216.187.60)' can't be established.
 ED25519 key fingerprint is SHA256:vMMi2lkyhu0BPeqfncLzDRo6a1Ae8TtyVETebvh2ZwU.
 This key is not known by any other names.
@@ -80,10 +80,10 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
 Diese Meldung bedeutet:
+
 - SSH überprüft die Identität des Servers anhand seines öffentlichen Fingerprints.
 - Da du dich zum ersten Mal verbindest, ist der Host Key noch nicht in `~/.ssh/known_hosts` gespeichert.
 - Tippe **`yes`**, um den Schlüssel zu akzeptieren und die Verbindung herzustellen.
-
 
 ## Passwort zurücksetzen
 

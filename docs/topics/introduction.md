@@ -31,7 +31,7 @@ Mit diesem simplen Code-Block wird ein vollständiger Server in der Hetzner Clou
 
 ### Warum Terraform?
 
-- **Deklarativ**: Man beschreibt *was* man haben möchte, nicht *wie* es erstellt wird.
+- **Deklarativ**: Man beschreibt _was_ man haben möchte, nicht _wie_ es erstellt wird.
 - **Provider-Ökosystem**: Unterstützt hunderte Cloud-Anbieter (AWS, Azure, Hetzner, etc.)
 - **State Management**: Terraform merkt sich den aktuellen Zustand der Infrastruktur und kann Änderungen gezielt anwenden.
 - **Plan & Apply**: Vor jeder Änderung zeigt `terraform plan`, was genau passieren wird erst nach Bestätigung wird `terraform apply` ausgeführt.

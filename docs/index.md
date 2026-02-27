@@ -2,8 +2,8 @@
 layout: home
 
 hero:
-  name: "SDI Exercises"
-  text: "Software-Defined Infrastructure"
+  name: 'SDI Exercises'
+  text: 'Software-Defined Infrastructure'
   tagline: Step-by-Step Anleitungen für die Übungen der Vorlesung Software Defined Infrastructure
   actions:
     - theme: brand

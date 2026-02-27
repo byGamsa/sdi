@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-  title: "SDI Exercises",
-  description: "Step-by-Step Anleitungen für die Übungen der Vorlesung Software Defined Infrastructure an der HdM Stuttgart",
+  title: 'SDI Exercises',
+  description:
+    'Step-by-Step Anleitungen für die Übungen der Vorlesung Software Defined Infrastructure an der HdM Stuttgart',
   base: '/sdi/',
   themeConfig: {
     search: {
@@ -19,9 +20,7 @@ export default defineConfig({
       '/exercises/': [
         {
           text: 'Übungen',
-          items: [
-            { text: 'Übersicht', link: '/exercises/' },
-          ],
+          items: [{ text: 'Übersicht', link: '/exercises/' }],
         },
         {
           text: 'Terraform',
@@ -37,7 +36,10 @@ export default defineConfig({
             { text: 'Exercise 20', link: '/exercises/20-mounts-points-name-specification' },
             { text: 'Exercise 21', link: '/exercises/21-enhancing-your-web-server' },
             { text: 'Exercise 22', link: '/exercises/22-creating-dns-records' },
-            { text: 'Exercise 23', link: '/exercises/23-creating-host-with-corresponding-dns-entries' },
+            {
+              text: 'Exercise 23',
+              link: '/exercises/23-creating-host-with-corresponding-dns-entries',
+            },
             { text: 'Exercise 24', link: '/exercises/24-creating-a-fixed-number-of-servers' },
           ],
         },
@@ -75,20 +77,17 @@ export default defineConfig({
         {
           text: 'Netzwerk',
           collapsed: false,
-          items: [
-            { text: 'Private Netzwerke', link: '/topics/private-networks' },
-          ],
+          items: [{ text: 'Private Netzwerke', link: '/topics/private-networks' }],
         },
       ],
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/byGamsa/sdi' }
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/byGamsa/sdi' }],
 
     footer: {
-      message: 'Released under the <a href="https://github.com/vuejs/vitepress/blob/main/LICENSE">MIT License</a>.',
-      copyright: 'Copyright © 2025 <a href="https://larsgerigk.de">Lars Gerigk</a>'
-    }
-  }
-})
+      message:
+        'Released under the <a href="https://github.com/vuejs/vitepress/blob/main/LICENSE">MIT License</a>.',
+      copyright: 'Copyright © 2025 <a href="https://larsgerigk.de">Lars Gerigk</a>',
+    },
+  },
+});

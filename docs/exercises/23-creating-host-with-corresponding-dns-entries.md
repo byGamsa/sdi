@@ -6,12 +6,12 @@ In dieser Übung wird ein vollständiger Server mit passenden DNS-Einträgen ers
 
 ## Architektur-Komponenten
 
-| Komponente | Beschreibung |
-|---|---|
-| **DNS Provider** | Erstellt A-Records und CNAME-Aliase für den Server |
-| **SSH-Wrapper mit DNS** | `ssh.sh` und `scp.sh` verwenden DNS-Namen statt IP-Adressen |
-| **Known Hosts mit FQDN** | `known_hosts`-File verwendet den FQDN statt der IP |
-| **TLS Key** | Generiert SSH Host Key für den Server |
+| Komponente               | Beschreibung                                                   |
+| ------------------------ | -------------------------------------------------------------- |
+| **DNS Provider**         | Erstellt A-Records und CNAME-Aliase für den Server             |
+| **SSH-Wrapper mit DNS**  | `ssh.sh` und `scp.sh` verwenden DNS-Namen statt IP-Adressen    |
+| **Known Hosts mit FQDN** | `known_hosts`-File verwendet den FQDN statt der IP             |
+| **TLS Key**              | Generiert SSH Host Key für den Server                          |
 | **Dynamische Server-IP** | A-Records verwenden die tatsächliche IP des erstellten Servers |
 
 ## Codebasis
@@ -25,8 +25,9 @@ Diese Aufgabe baut auf dem Code von [Aufgabe 16](/exercises/16-solving-the-known
 Zunächst nehmen wir als Basiscode den Code aus Aufgabe 16. Dabei fügen wir sowohl den DNS-Code aus der `main.tf` der Aufgabe 22 hinzu, als auch die dort neu erstellten Variablen.
 
 ::: code-group
+
 ```hcl [main.tf]
-resource "local_file" "ssh_script" { 
+resource "local_file" "ssh_script" {
   content = templatefile("${path.module}/tpl/ssh.sh", {
     devopsUsername = var.loginUser,
     dnsName = "${var.serverName}.${var.dnsZone}"
@@ -35,7 +36,7 @@ resource "local_file" "ssh_script" {
   file_permission = "755"
 }
 
-resource "local_file" "scp_script" { 
+resource "local_file" "scp_script" {
   content = templatefile("${path.module}/tpl/scp.sh", {
     devopsUsername = var.loginUser,
     dnsName = "${var.serverName}.${var.dnsZone}"
@@ -89,6 +90,7 @@ resource "dns_cname_record" "aliases" {
   }
 }
 ```
+
 ```hcl [variable.tf]
 variable "hcloud_token" {
   description = "Hetzner Cloud API token (can be supplied via environment variable TF_VAR_hcloud_token)"
@@ -146,7 +148,7 @@ variable "serverAliases" {
   type        = list(string)
   default     = ["www", "mail"]
   nullable    = false
-  
+
   validation {
     condition     = length(var.serverAliases) == length(distinct(var.serverAliases))
     error_message = "Die Liste 'serverAliases' darf keine doppelten Einträge enthalten."
@@ -158,6 +160,7 @@ variable "serverAliases" {
   }
 }
 ```
+
 :::
 
 ### 2. Server-IP durch dynamische Referenz ersetzen
@@ -165,6 +168,7 @@ variable "serverAliases" {
 Im nächsten Schritt passen wir den Code an die eigentliche Aufgabenstellung an. Die Variable `serverIp` ist überflüssig, da wir jetzt die echte IP des erstellten Servers verwenden.
 
 ::: code-group
+
 ```hcl [variable.tf]
 variable "dnsZone" {
   description = "Die Basis-Domain / Zone"
@@ -185,6 +189,7 @@ variable "serverName" {
 }
 
 ```
+
 ```hcl [main.tf]
 resource "dns_a_record_set" "workhorse" {
   name = var.serverName
@@ -208,6 +213,7 @@ resource "null_resource" "dns_root" {
   }
 }
 ```
+
 :::
 
 ### 3. SSH- und SCP-Skripte auf DNS-Namen umstellen
@@ -215,6 +221,7 @@ resource "null_resource" "dns_root" {
 Als nächstes müssen die SSH- und SCP-Template-Dateien angepasst werden. Anstelle der IP-Adresse wird jetzt der DNS-Name (`${dnsName}`) als Verbindungsziel verwendet:
 
 ::: code-group
+
 ```bash [tpl/ssh.sh]
 #!/usr/bin/env bash
 
@@ -222,6 +229,7 @@ GEN_DIR=$(dirname "$0")/../gen
 
 ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${devopsUsername}@${dnsName} "$@" # // [!code ++]
 ```
+
 ```bash [tpl/scp.sh]
 #!/usr/bin/env bash
 
@@ -233,6 +241,7 @@ else
    scp -o UserKnownHostsFile="$GEN_DIR/known_hosts" $@
 fi
 ```
+
 :::
 
 ### 4. Übergabewerte anpassen
@@ -240,14 +249,15 @@ fi
 Zuletzt müssen die Übergabewerte für die generierten Dateien angepasst werden. Dabei wird statt der IP der `serverName` und die `dnsZone` übergeben.
 
 ::: code-group
+
 ```hcl [main.tf]
-resource "local_file" "known_hosts" { 
+resource "local_file" "known_hosts" {
   content = "${var.serverName}.${var.dnsZone} ${tls_private_key.host_key.public_key_openssh}" // [!code ++]
   filename        = "gen/known_hosts"
   file_permission = "644"
 }
 
-resource "local_file" "ssh_script" { 
+resource "local_file" "ssh_script" {
   content = templatefile("${path.module}/tpl/ssh.sh", {
     devopsUsername = var.loginUser,
     dnsName = "${var.serverName}.${var.dnsZone}" // [!code ++]
@@ -256,7 +266,7 @@ resource "local_file" "ssh_script" {
   file_permission = "755"
 }
 
-resource "local_file" "scp_script" { 
+resource "local_file" "scp_script" {
   content = templatefile("${path.module}/tpl/scp.sh", {
     devopsUsername = var.loginUser,
     dnsName = "${var.serverName}.${var.dnsZone}" // [!code ++]
@@ -265,6 +275,7 @@ resource "local_file" "scp_script" {
   file_permission = "755"
 }
 ```
+
 :::
 
 ### 5. Ergebnisse kontrollieren
@@ -272,10 +283,12 @@ resource "local_file" "scp_script" {
 Abschließend kann man alles ausführen und die Ergebnisse überprüfen. Die generierten Dateien sollten jetzt den DNS-Namen statt der IP enthalten:
 
 ::: code-group
-``` [gen/known_hosts]
+
+```[gen/known_hosts]
 workhorse.g1.sdi.hdm-stuttgart.cloud ssh-ed25519 AAAAC....
 
 ```
+
 ```bash [bin/ssh]
 #!/usr/bin/env bash
 
@@ -283,6 +296,7 @@ GEN_DIR=$(dirname "$0")/../gen
 
 ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" devops@workhorse.g1.sdi.hdm-stuttgart.cloud "$@"
 ```
+
 ```bash [bin/scp]
 #!/usr/bin/env bash
 
@@ -294,6 +308,7 @@ else
    scp -o UserKnownHostsFile="$GEN_DIR/known_hosts" $@
 fi
 ```
+
 :::
 
 Zusätzlich können die generierten Skripte ausgeführt werden, um die Funktionalität zu prüfen. Außerdem kann die DNS-Konfiguration über den Zone Transfer verifiziert werden:
