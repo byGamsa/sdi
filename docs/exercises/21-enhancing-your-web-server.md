@@ -28,10 +28,10 @@ Exportiere den Schlüssel und überprüfe, ob die Zone existiert und aktiv ist:
 
 ```bash
 # Export your HMAC key as an environment variable
-export HMAC="hmac-sha512:g1.key:<YOUR_SECRET_KEY>"
+export HMAC="g1.key:<YOUR_SECRET_KEY>"
 
 # Perform a full zone transfer (AXFR)
-dig @ns1.hdm-stuttgart.cloud -y $HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
+dig @ns1.hdm-stuttgart.cloud -y "hmac-sha512:"$HMAC -t AXFR g1.sdi.hdm-stuttgart.cloud
 ```
 
 ::: info
@@ -135,9 +135,17 @@ resource "hcloud_firewall" "fw" {
 }
 ```
 
+::: info
+
+Stelle sicher dass `nsupdate` bei dir Lokal installiert ist.
+
+Falls nicht kannst du es über `sudo apt install bind9-dnsutils` installieren.
+
 :::
 
-Anschließend muss auf den Server zugegriffen und Certbot (der Let's Encrypt Client) samt dem Nginx-Plugin installiert werden:
+:::
+
+Nach erfolgreicher Ausführung mit `terraform apply` muss auf den Server zugegriffen und Certbot (der Let's Encrypt Client) samt dem Nginx-Plugin installiert werden:
 
 ```bash
 sudo apt install certbot python3-certbot-nginx

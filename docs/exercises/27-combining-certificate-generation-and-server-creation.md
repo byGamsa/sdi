@@ -1,8 +1,21 @@
-# 27. Combining certificate generation and server creation
+# 27. Zertifikatserstellung und Servererstellung kombinieren
 
-Diese Aufgabe baut auf den Aufgaben 25 und 26 auf.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_certs.html#sdi_cloudProvider_certs_qanda_tlsCompleteHost)
 
-Nachdem wir bereits getestet haben, dass unser Zertifikat vollständig funktioniert, wollen wir ab jetzt nicht mehr manuell das Zertifikat zum Server hinzufügen, sondern automatisiert. Hierfür erweitern wir unsere Terraform-Konfiguration.
+Nachdem wir bereits getestet haben, dass unser Zertifikat vollständig funktioniert, wollen wir das Zertifikat von nun an nicht mehr manuell zum Server hinzufügen, sondern komplett automatisiert. Hierfür erweitern wir unsere Terraform-Konfiguration.
+
+## Architektur-Komponenten
+
+| Komponente     | Beschreibung                                      |
+| -------------- | ------------------------------------------------- |
+| **Server**     | Automatisiertes Cloud-Init Setup mit Zertifikaten |
+| **Web Server** | Nginx Konfiguration (HTTPS & HTTP)                |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 25](/exercises/25-creating-a-web-certificate) und [Aufgabe 26](/exercises/26-testing-your-web-certificate) auf.
+
+## Übungsschritte
 
 ::: warning
 Bevor an dieser Aufgabe weitergearbeitet wird, sollte überprüft werden, dass in der provider.tf wieder die Staging-URL für Let's Encrypt eingetragen ist!

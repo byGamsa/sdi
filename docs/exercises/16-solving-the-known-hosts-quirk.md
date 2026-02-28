@@ -180,5 +180,5 @@ Das `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` Problem sollte damit beho
 Dateien können mit dem SCP-Wrapper kopiert werden (IP, Name und Pfade entsprechend anpassen):
 
 ```bash
-./bin/scp test.txt devops@65.21.251.129:/home/devops
+./bin/scp test.txt devops@<SERVER_IP>:/home/devops
 ```

@@ -101,7 +101,7 @@ Diese Firewall-Ressource muss anschließend in der Server-Ressource referenziert
 Nach dem erfolgreichen Deploy mit `terraform apply` lässt sich das Ergebnis verifizieren. Der folgende Befehl fragt die IP-Adresse über Terraform ab und sendet einen HTTP-Request an den Webserver:
 
 ```bash
-  curl http://$(terraform output -raw ip_addr)
+  curl http://<SERVER_IP>
 ```
 
 Als Resultat sollte der HTML-Quellcode der Nginx-Willkommensseite erscheinen:

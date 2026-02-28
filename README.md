@@ -66,6 +66,7 @@ In jedem Übungsverzeichnis (unter `exercises/`) befindet sich eine Datei namens
 2. Öffnen Sie `secrets.auto.tfvars` und ersetzen Sie die Platzhalter:
    - **Hetzner API Token**: Erstellen Sie ein Projekt in der [Hetzner Cloud Console](https://console.hetzner.cloud/), gehen Sie auf "Security" -> "API Tokens" und generieren Sie einen "Read & Write" Token.
    - **SSH Key**: Fügen Sie Ihren Public SSH Key hinzu. Falls Sie noch keinen haben, generieren Sie diesen mit `ssh-keygen`.
+3. Ab Aufgabe 22 ist die Setzung der Variablen in zwei Dateien unterteilt. Dazu kommt die `config.auto.tfvars.template`, diese Datei muss ebenfalls kopiert werden: `copy config.auto.tfvars.template config.auto.tfvars` (oder manuell dupliziert werden). Hier sind Änderungen nur bei Bedarf notwendig.
 
 ### Beispiel: Eine Übung starten
 

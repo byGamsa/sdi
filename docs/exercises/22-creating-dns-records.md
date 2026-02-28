@@ -24,7 +24,7 @@ Diese Übung startet von einer **neuen, leeren Konfiguration**. Alle Ressourcen 
 - HMAC-Variable ist exportiert:
 
 ```bash
-export HMAC="g1.key:CCqK..."
+export HMAC="g1.key:<YOUR_SECRET_KEY>"
 ```
 
 ## Übungsschritte
