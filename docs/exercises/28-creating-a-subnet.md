@@ -209,7 +209,7 @@ resource "hcloud_server" "intern" { // [!code ++:15]
 
 Um die Verteilung interner DNS Namen zu ermöglichen, muss zunächst die `tpl/userData.yml` Datei angepasst werden.
 
-::: code-block
+::: code-group
 
 ```yml [tpl/userData-yml]
 #cloud-config
@@ -331,9 +331,9 @@ write_files:
     content: |
       127.0.1.1 {{fqdn}} {{hostname}}
       127.0.0.1 localhost
-
-      10.0.1.10 gateway.${dnsDomainName} gateway // [!code ++]
-      10.0.1.20 intern.${dnsDomainName} intern // [!code ++]
+      // [!code ++:2]
+      10.0.1.10 gateway.${dnsDomainName} gateway 
+      10.0.1.20 intern.${dnsDomainName} intern  
 ```
 
 :::
