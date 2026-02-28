@@ -146,7 +146,7 @@ variable "loginUser" {
 Zuerst erweitern wir unsere main.tf, um ein privates Netzwerk (10.0.0.0/8) und ein Subnetz (10.0.1.0/24) zu erstellen.
 ::: code-group
 
-```hcl [main.tf] 
+```hcl [main.tf]
 resource "hcloud_network" "privateNet" { // [!code ++:11]
   name     = "Private Network"
   ip_range = "10.0.0.0/8"
