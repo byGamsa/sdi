@@ -1,0 +1,38 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-cacher-ng
+
+ssh_pwauth: false
+disable_root: true
+
+ssh_keys:
+  ed25519_private: |
+    ${tls_private_key}
+
+write_files:
+  - path: /etc/cloud/templates/hosts.debian.tmpl
+    content: |
+      127.0.1.1 {{fqdn}} {{hostname}}
+      127.0.0.1 localhost
+      
+      10.0.1.10 gateway.${dnsDomainName} gateway
+      10.0.1.20 intern.${dnsDomainName} intern
+  - path: /etc/apt-cacher-ng/zz_local.conf
+    content: |
+      BindAddress: 10.0.1.10
+      Port: 3142
+
+runcmd:
+  # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
+  - systemctl restart ssh
+  - systemctl restart apt-cacher-ng
+users:
+  - name: ${loginUser}
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${sshKey}
