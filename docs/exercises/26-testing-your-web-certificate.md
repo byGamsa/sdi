@@ -1,17 +1,31 @@
-# 26. Testing your web certificate
+# 26. Web-Zertifikat testen
 
-Diese Aufgabe baut auf dem Code von Aufgabe 25 auf.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_certs.html#sdi_cloudProvider_certs_qanda_testCert)
 
-- Es werden drei DNS Einträge angelegt.
-- Ein Nginx Web Server wird angelegt und so konfiguriert, dass https requests mit dem in der letzten Aufgabe erstellten Zertifikat zugelassen werden.
-- Falls alles erfolgreich funktioniert, kann das Ganze einmal mit der Production-URL von Let's Encrypt durchgeführt werden.
-  In dieser Aufgabe wird dies noch manuell implementiert, in der nächsten Aufgabe erfolgt alles automatisiert.
+In dieser Übung werden folgende Punkte umgesetzt:
+- Es werden drei DNS-Einträge angelegt.
+- Ein Nginx Web-Server wird eingerichtet und so konfiguriert, dass HTTPS-Requests mit dem in der letzten Aufgabe erstellten Zertifikat zugelassen werden.
+- Nachdem alles manuell getestet wurde, kann der Prozess testweise mit der Production-URL von Let's Encrypt durchgeführt werden. In dieser Übung erfolgt die Konfiguration noch manuell, bevor sie in der nächsten automatisiert wird.
 
-Da wir bisher zwei Server in unserer Konfiguration gestartet haben, allerdings nur einen brauchen, kann bei der Variablen `serverCount=1` eingestellt werden.
+## Architektur-Komponenten
 
-Anschließend kann der Terraform-Code schon ausgeführt werden.
+| Komponente                   | Beschreibung                                        |
+| ---------------------------- | --------------------------------------------------- |
+| **Web Server**               | Nginx                                               |
+| **Zertifizierung**           | ACME Provider (Let's Encrypt TLS-Zertifikate)       |
+| **Netzwerk/Sicherheit**      | HTTPS (Port 443) Setup                              |
 
-Sobald der Server eingerichtet wurde, können wir mit unserem generierten `scp`-File im Ordner work-1/ unser generiertes Zertifikat und unser generierten private Key auf den Server kopieren.
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 25](/exercises/25-creating-a-web-certificate) auf.
+
+## Übungsschritte
+
+Da wir bisher zwei Server in unserer Konfiguration gestartet haben, allerdings für diesen Test nur einen benötigen, kann die Variable `serverCount=1` gesetzt werden.
+
+Anschließend kann der Terraform-Code ausgeführt werden.
+
+Sobald der Server eingerichtet wurde, können wir mit unserem generierten `scp`-Skript im Ordner `work-1/` unser generiertes Zertifikat und unseren generierten Private Key auf den Server kopieren.
 ::: warning
 Das öffentliche Zertifikat wird normalerweise in den Ordner /etc/ssl/certs/ kopiert, der private Schlüssel kommt in der Ordner /etc/ssl/private/. Da der devops-User nicht einfach dort seine Dateien ablegen darf und der direkte Weg über den root-User deaktiviert wird, müssen wir als Zwischenschritt die Files zuerst in das Homeverzeichnis des devops-Users speichern, anschließend können wir die Files in den richtigen Speicherort speichern.
 :::

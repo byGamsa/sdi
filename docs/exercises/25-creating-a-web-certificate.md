@@ -1,13 +1,26 @@
-# 25. Creating a web certificate
+# 25. Ein Web-Zertifikat erstellen
 
-Diese Aufgabe baut auf der Aufgabe 24 auf.
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_certs.html#sdi_cloudProvider_certs_qanda_createCert)
 
-Hier geht es darum, mithilfe von Terraform ein SSL/TLS- Zertifikat von Let's Encrypt automatisiert signieren zu lassen und lokal abzuspeichern (für die die Hauptdomain und alle Subdomains).
-Diese Aufgabe ist also eine Erweiterung der Aufgabe 21, bei der wir uns per SSH auf dem erstellten Server einloggen mussten und das Zertifikat manuell über die Kommandozeile holen mussten.
+In dieser Übung geht es darum, mithilfe von Terraform ein SSL/TLS-Zertifikat von Let's Encrypt automatisiert signieren zu lassen und lokal abzuspeichern (für die Haupt-Domain und alle Sub-Domains). Dies ist eine Erweiterung zur Aufgabe 21, bei der das Zertifikat noch manuell über das CLI (Command Line Interface) direkt auf dem Server bezogen wurde.
+
+## Architektur-Komponenten
+
+| Komponente                   | Beschreibung                                        |
+| ---------------------------- | --------------------------------------------------- |
+| **Zertifizierung**           | ACME Provider (Let's Encrypt), RSA & ED25519 Keys   |
+| **DNS**                      | DNS-Challenge mittels RFC2136                       |
+| **Netzwerk/Sicherheit**      | Firewall Rules für HTTPS (Port 443)                 |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 24](/exercises/24-creating-a-fixed-number-of-servers) auf.
+
+## Übungsschritte
 
 ### Provider konfigurieren
 
-Zuerst sollten wir den Provider konfigurieren, mit der richtigen URL, die uns in der Aufgabe vorgegeben wurde. Außerdem sollte `acme` zusätzlich in der `provider.tf` hinzugefügt werden.
+Zuerst konfigurieren wir den Provider mit der von Let's Encrypt bereitgestellten URL. Der `acme`-Provider muss zusätzlich in die `provider.tf` eingefügt werden.
 ::: warning
 
 - Es ist wichtig die Staging-URL zu benutzen, statt der Production-URL, da es strenge Rate-Limits gibt.

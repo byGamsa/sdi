@@ -1,15 +1,28 @@
-# 28. Creating a subnet
+# 28. Ein Subnetz erstellen
 
-Da diese Aufgabe mit dem erstellen von privaten Netzwerken ein komplett neues Szenario ist, baut diese Aufgabe nicht direkt auf den vorherigen Aufgaben auf. Allerdings werden die wichtigsten Teile der Konfiguration übernommen (siehe Dokumentation unten).
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_networks.html#sdi_cloudProvider_networks_qanda_simpleSubnet)
 
-In dieser Aufgabe geht es darum
+In dieser Übung geht es darum:
+- Ein privates Netzwerk und ein privates Subnetz zu erstellen.
+- Ein Gateway einzurichten, das zwei Netzwerkschnittstellen besitzt: eine zum privaten Subnetz und eine zum Internet (über SSH erreichbar).
+- Einen internen Host aufzusetzen, der ausschließlich mit dem privaten Subnetz verbunden ist. Er ist vom Internet isoliert, hat keinen Internetzugang und ist nur vom Gateway-Host aus erreichbar.
+- Lokale DNS-Namen festzulegen, die auf den beiden Hosts verwendet werden.
 
-- ein privates Netzwerk und ein privates Subnetz zu erstellen
-- Der Gateway soll zwei Netzwerkschnittstellen haben, eins zum privaten Subnetz, eins zum Internet (über ssh erreichbar)
-- Der interne Host ist nur mit dem privaten Subnetz verbunden. Er ist vom Internet isoliert und nur vom Gateway-Host aus erreichbar (kein Internetzugang)
-- DNS-Namen sollen angegeben werden, die lokal auf den beiden Hosts verwendet werden sollen
+## Architektur-Komponenten
 
-#### Erstellung der Files zu Beginn der Aufgabe
+| Komponente                   | Beschreibung                                                       |
+| ---------------------------- | ------------------------------------------------------------------ |
+| **Netzwerk**                 | Privates Netzwerk (`10.0.0.0/8`), Subnetz (`10.0.1.0/24`)          |
+| **Hosts**                    | Gateway-Host (öffentlich & privat), Interner Host (nur privat)     |
+| **DNS**                      | Lokale DNS-Namen über `/etc/hosts`                                 |
+
+## Codebasis
+
+Da diese Aufgabe mit dem Erstellen von privaten Netzwerken ein komplett neues Szenario einführt, baut sie nicht direkt auf den vorherigen Übungen auf. Dennoch werden grundlegende Teile der bestehenden Konfiguration übernommen (siehe Dokumentation unten).
+
+## Übungsschritte
+
+### Erstellung der Dateien zu Beginn der Aufgabe
 
 ::: warning
 Zu beachten ist, dass der `tpl/`- Ordner mit zugehörigen Inhalt und die output.tf mit Inhalt gleich bleibt

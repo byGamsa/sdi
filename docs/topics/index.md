@@ -17,9 +17,3 @@ Hier werden die übergreifenden Themen des Kurses unabhängig von den einzelnen 
 - [Volumes](/topics/volumes)
 - [Terraform Loops](/topics/terraform-loops)
 - [Terraform und DNS](/topics/terraform-and-dns)
-- [SSL Zertifikate](/topics/ssl-certificates)
-- [Terraform States](/topics/terraform-states)
-
-## Netzwerk
-
-- [Private Netzwerke](/topics/private-networks)
