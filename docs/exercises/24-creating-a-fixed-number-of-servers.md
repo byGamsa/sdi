@@ -203,8 +203,8 @@ ip_addr = [
 Teste die generierten SSH-Skripte für jeden Server:
 
 ```bash
-./work-1/bin/ssh
-./work-2/bin/ssh
+./workhorse-1/bin/ssh
+./workhorse-2/bin/ssh
 ```
 
 Zudem kann der Befehl von Aufgabe 22 und Aufgabe 23 die korrekte Einrichtung bestätigen:
