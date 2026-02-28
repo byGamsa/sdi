@@ -6,10 +6,10 @@ Nachdem wir bereits getestet haben, dass unser Zertifikat vollständig funktioni
 
 ## Architektur-Komponenten
 
-| Komponente                   | Beschreibung                                        |
-| ---------------------------- | --------------------------------------------------- |
-| **Server**                   | Automatisiertes Cloud-Init Setup mit Zertifikaten   |
-| **Web Server**               | Nginx Konfiguration (HTTPS & HTTP)                  |
+| Komponente     | Beschreibung                                      |
+| -------------- | ------------------------------------------------- |
+| **Server**     | Automatisiertes Cloud-Init Setup mit Zertifikaten |
+| **Web Server** | Nginx Konfiguration (HTTPS & HTTP)                |
 
 ## Codebasis
 

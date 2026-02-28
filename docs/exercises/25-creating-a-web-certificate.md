@@ -6,11 +6,11 @@ In dieser Übung geht es darum, mithilfe von Terraform ein SSL/TLS-Zertifikat vo
 
 ## Architektur-Komponenten
 
-| Komponente                   | Beschreibung                                        |
-| ---------------------------- | --------------------------------------------------- |
-| **Zertifizierung**           | ACME Provider (Let's Encrypt), RSA & ED25519 Keys   |
-| **DNS**                      | DNS-Challenge mittels RFC2136                       |
-| **Netzwerk/Sicherheit**      | Firewall Rules für HTTPS (Port 443)                 |
+| Komponente              | Beschreibung                                      |
+| ----------------------- | ------------------------------------------------- |
+| **Zertifizierung**      | ACME Provider (Let's Encrypt), RSA & ED25519 Keys |
+| **DNS**                 | DNS-Challenge mittels RFC2136                     |
+| **Netzwerk/Sicherheit** | Firewall Rules für HTTPS (Port 443)               |
 
 ## Codebasis
 
@@ -167,6 +167,6 @@ openssl x509 -in gen/certificate.pem -text -noout
 
 Hier kann man den Issuer überprüfen und überprüfen, ob die Domains richtig gesetzt wurden. So sollte der korrekte Issuer in etwa aussehen:
 
-```
+```text
 Issuer: C = US, O = (STAGING) Let's Encrypt, CN = (STAGING) Tenuous Tomato R13
 ```

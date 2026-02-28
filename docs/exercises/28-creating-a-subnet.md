@@ -3,6 +3,7 @@
 Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_networks.html#sdi_cloudProvider_networks_qanda_simpleSubnet)
 
 In dieser Übung geht es darum:
+
 - Ein privates Netzwerk und ein privates Subnetz zu erstellen.
 - Ein Gateway einzurichten, das zwei Netzwerkschnittstellen besitzt: eine zum privaten Subnetz und eine zum Internet (über SSH erreichbar).
 - Einen internen Host aufzusetzen, der ausschließlich mit dem privaten Subnetz verbunden ist. Er ist vom Internet isoliert, hat keinen Internetzugang und ist nur vom Gateway-Host aus erreichbar.
@@ -10,11 +11,11 @@ In dieser Übung geht es darum:
 
 ## Architektur-Komponenten
 
-| Komponente                   | Beschreibung                                                       |
-| ---------------------------- | ------------------------------------------------------------------ |
-| **Netzwerk**                 | Privates Netzwerk (`10.0.0.0/8`), Subnetz (`10.0.1.0/24`)          |
-| **Hosts**                    | Gateway-Host (öffentlich & privat), Interner Host (nur privat)     |
-| **DNS**                      | Lokale DNS-Namen über `/etc/hosts`                                 |
+| Komponente   | Beschreibung                                                   |
+| ------------ | -------------------------------------------------------------- |
+| **Netzwerk** | Privates Netzwerk (`10.0.0.0/8`), Subnetz (`10.0.1.0/24`)      |
+| **Hosts**    | Gateway-Host (öffentlich & privat), Interner Host (nur privat) |
+| **DNS**      | Lokale DNS-Namen über `/etc/hosts`                             |
 
 ## Codebasis
 
