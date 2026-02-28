@@ -8,14 +8,6 @@ In dieser Übung werden folgende Punkte umgesetzt:
 - Ein Nginx Web-Server wird eingerichtet und so konfiguriert, dass HTTPS-Requests mit dem in der letzten Aufgabe erstellten Zertifikat zugelassen werden.
 - Nachdem alles manuell getestet wurde, kann der Prozess testweise mit der Production-URL von Let's Encrypt durchgeführt werden. In dieser Übung erfolgt die Konfiguration noch manuell, bevor sie in der nächsten automatisiert wird.
 
-## Architektur-Komponenten
-
-| Komponente              | Beschreibung                                  |
-| ----------------------- | --------------------------------------------- |
-| **Web Server**          | Nginx                                         |
-| **Zertifizierung**      | ACME Provider (Let's Encrypt TLS-Zertifikate) |
-| **Netzwerk/Sicherheit** | HTTPS (Port 443) Setup                        |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 25](/exercises/25-creating-a-web-certificate) auf.

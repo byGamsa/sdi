@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird das Volume-Mounting weiter automatisiert und verbessert. Server und Volume werden unabhängig voneinander erstellt und über eine `hcloud_volume_attachment` Ressource verbunden. Anstelle des automatischen Mountings durch Hetzner übernimmt Cloud-Init die Einrichtung: Es erstellt den Mount-Punkt, trägt das Volume in `/etc/fstab` ein und sorgt dafür, dass alles sofort und nach jedem Neustart verfügbar ist.
 
-## Architektur-Komponenten
-
-| Komponente              | Beschreibung                                                                             |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| **Location Variable**   | Stellt sicher, dass Server und Volume am gleichen Standort (z.B. `nbg1`) erstellt werden |
-| **Volume Attachment**   | Entkoppelte Verbindung von Volume und Server (ohne Automount)                            |
-| **Cloud-Init Template** | Automatisiert das Erstellen des Mount-Punkts und den fstab-Eintrag                       |
-| **fstab Automation**    | Persistentes Mounting über Cloud-Init statt manueller Konfiguration                      |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 19](/exercises/19-partitions-and-mounting) auf. Die dort manuell durchgeführten Schritte werden hier automatisiert.

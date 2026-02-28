@@ -4,14 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird ein wiederverwendbares Terraform-Submodul `HostMetaData` erstellt. Dieses Modul nimmt die Daten eines Servers entgegen und erzeugt daraus eine JSON-Datei mit Hostmetadaten (IPv4, IPv6, Location).
 
-## Architektur-Komponenten
-
-| Komponente                           | Beschreibung                                                    |
-| ------------------------------------ | --------------------------------------------------------------- |
-| **Terraform Modul `host-meta-data`** | Wiederverwendbares Submodul mit eigenen Variablen und Templates |
-| **JSON Template**                    | Template-Datei für die strukturierte Ausgabe der Hostdaten      |
-| **Modul-Einbindung**                 | Das Hauptprojekt verwendet das Modul über den `module`-Block    |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 15](/exercises/15-working-on-cloud-init) auf.

@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird eine grundlegende Cloud-Infrastruktur mit Terraform auf Hetzner Cloud aufgebaut. Ausgehend von einem einzelnen minimalen Server wird die Konfiguration schrittweise um Sicherheitsfeatures wie Firewalls und SSH-Keys erweitert, bis ein produktionsnahes Setup entsteht.
 
-## Architektur-Komponenten
-
-| Komponente                  | Beschreibung                                               |
-| --------------------------- | ---------------------------------------------------------- |
-| **Terraform Konfiguration** | Definiert die gesamte Infrastruktur als Code               |
-| **Hetzner Cloud Provider**  | Stellt Server-Ressourcen in der Cloud bereit               |
-| **Firewall**                | Kontrolliert eingehenden Netzwerkverkehr (Port 22 für SSH) |
-| **SSH Key Management**      | Ermöglicht sicheren, passwortlosen Zugriff auf den Server  |
-
 ## Codebasis
 
 Diese Übung ist der **Ausgangspunkt** des Kurses und baut auf keiner vorherigen Aufgabe auf. Hier wird das Terraform-Projekt von Grund auf erstellt.

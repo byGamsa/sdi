@@ -9,14 +9,6 @@ In dieser Übung geht es darum:
 - Einen internen Host aufzusetzen, der ausschließlich mit dem privaten Subnetz verbunden ist. Er ist vom Internet isoliert, hat keinen Internetzugang und ist nur vom Gateway-Host aus erreichbar.
 - Lokale DNS-Namen festzulegen, die auf den beiden Hosts verwendet werden.
 
-## Architektur-Komponenten
-
-| Komponente   | Beschreibung                                                   |
-| ------------ | -------------------------------------------------------------- |
-| **Netzwerk** | Privates Netzwerk (`10.0.0.0/8`), Subnetz (`10.0.1.0/24`)      |
-| **Hosts**    | Gateway-Host (öffentlich & privat), Interner Host (nur privat) |
-| **DNS**      | Lokale DNS-Namen über `/etc/hosts`                             |
-
 ## Codebasis
 
 Da diese Aufgabe mit dem Erstellen von privaten Netzwerken ein komplett neues Szenario einführt, baut sie nicht direkt auf den vorherigen Übungen auf. Dennoch werden grundlegende Teile der bestehenden Konfiguration übernommen (siehe Dokumentation unten).

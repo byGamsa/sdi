@@ -4,13 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 Nachdem wir bereits getestet haben, dass unser Zertifikat vollständig funktioniert, wollen wir das Zertifikat von nun an nicht mehr manuell zum Server hinzufügen, sondern komplett automatisiert. Hierfür erweitern wir unsere Terraform-Konfiguration.
 
-## Architektur-Komponenten
-
-| Komponente     | Beschreibung                                      |
-| -------------- | ------------------------------------------------- |
-| **Server**     | Automatisiertes Cloud-Init Setup mit Zertifikaten |
-| **Web Server** | Nginx Konfiguration (HTTPS & HTTP)                |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 25](/exercises/25-creating-a-web-certificate) und [Aufgabe 26](/exercises/26-testing-your-web-certificate) auf.

@@ -4,16 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung werden DNS-Records vollständig mit Terraform verwaltet. Ausgehend von einer leeren Konfiguration wird schrittweise ein komplettes DNS-Setup aufgebaut: Zuerst ein einzelner A-Record, dann CNAME-Aliase, anschließend werden hartcodierte Strings durch Variablen ersetzt, und abschließend werden Validierungsregeln hinzugefügt, die fehlerhafte Konfigurationen verhindern.
 
-## Architektur-Komponenten
-
-| Komponente                | Beschreibung                                                  |
-| ------------------------- | ------------------------------------------------------------- |
-| **DNS Provider**          | Terraform-Provider mit TSIG-Authentifizierung zum Nameserver  |
-| **A-Record**              | Verknüpft die `workhorse`-Subdomain mit einer IP-Adresse      |
-| **Root A-Record**         | Verknüpft die Basis-Domain mit einer IP (über `nsupdate`)     |
-| **CNAME-Records**         | Aliase (`www`, `mail`) für die Hauptdomain                    |
-| **Variablen-Validierung** | `distinct()` und `contains()` verhindern fehlerhafte Eingaben |
-
 ## Codebasis
 
 Diese Übung startet von einer **neuen, leeren Konfiguration**. Alle Ressourcen der vorherigen Aufgaben sollten gelöscht sein (`terraform destroy`). Erstelle drei frische Dateien: `main.tf`, `variable.tf` und `secrets.auto.tfvars`.

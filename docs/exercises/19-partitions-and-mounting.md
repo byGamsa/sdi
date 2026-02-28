@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird ein externes Block-Storage-Volume an einen Server angebunden. Dabei werden die grundlegenden Linux-Konzepte zum Partitionieren, Formatieren und Einhängen von Dateisystemen manuell durchgeführt. Anschließend wird das Mounting persistent gemacht, sodass das Volume auch nach einem Server-Neustart automatisch wieder zur Verfügung steht.
 
-## Architektur-Komponenten
-
-| Komponente                | Beschreibung                                                       |
-| ------------------------- | ------------------------------------------------------------------ |
-| **Hetzner Volume**        | 10 GB externer Block-Storage, unabhängig vom Server-Lebenszyklus   |
-| **Volume Attachment**     | Terraform-Ressource zur Verknüpfung von Volume und Server          |
-| **Cloud-Init Workaround** | Löst den Automount-Bug über `udevadm trigger`                      |
-| **fstab**                 | Linux-Konfigurationsdatei für persistentes Mounting nach Neustarts |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 18](/exercises/18-a-module-for-ssh-host-key-handling) auf.

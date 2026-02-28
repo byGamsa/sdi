@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird ein Webserver (Nginx) automatisch bei der Servererstellung installiert. Anstatt den Server manuell nach der Erstellung zu konfigurieren, nutzen wir Cloud-Init, ein Initialisierungstool, das beim ersten Bootvorgang ein Shell-Script ausführt und so den Server vollautomatisch einrichtet.
 
-## Architektur-Komponenten
-
-| Komponente                        | Beschreibung                                                      |
-| --------------------------------- | ----------------------------------------------------------------- |
-| **Terraform Konfiguration**       | Definiert die Infrastruktur und übergibt das Init-Script          |
-| **Cloud-Init Script (`init.sh`)** | Shell-Script, das beim ersten Boot Nginx installiert und startet  |
-| **HTTP Firewall**                 | Neue Firewallregel für Port 80, damit die Webseite erreichbar ist |
-| **SSH Key Management**            | Ermöglicht sicheren Zugriff auf den Server                        |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 13](/exercises/13-incrementally-creating-a-base-system) auf. Der dort erstellte Server mit Firewall und SSH-Key wird hier um Cloud-Init erweitert.

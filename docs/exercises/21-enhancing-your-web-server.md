@@ -4,16 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird der bestehende Webserver um DNS-Einträge und TLS-Verschlüsselung (HTTPS) erweitert. Dabei werden A-Records erstellt, die sowohl die Hauptdomain als auch die `www`-Subdomain auf die Server-IP verweisen. Anschließend wird mit Let's Encrypt ein kostenloses TLS-Zertifikat eingerichtet, sodass der Webserver über HTTPS erreichbar ist.
 
-## Architektur-Komponenten
-
-| Komponente                  | Beschreibung                                                   |
-| --------------------------- | -------------------------------------------------------------- |
-| **DNS Provider**            | Terraform-Provider für DNS-Updates über TSIG-Authentifizierung |
-| **A-Record (Root)**         | Verknüpft die Hauptdomain mit der Server-IP (über `nsupdate`)  |
-| **A-Record (www)**          | Verknüpft die `www`-Subdomain mit der Server-IP                |
-| **Firewall (Port 443)**     | Erlaubt eingehenden HTTPS-Verkehr                              |
-| **Certbot / Let's Encrypt** | Automatische TLS-Zertifikatserstellung und Nginx-Konfiguration |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 20](/exercises/20-mounts-points-name-specification) auf.

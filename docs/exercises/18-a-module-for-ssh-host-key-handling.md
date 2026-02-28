@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird die SSH-Host-Key-Logik aus [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) in ein wiederverwendbares Terraform-Modul `SshKnownHosts` ausgelagert. Das Modul generiert die SSH- und SCP-Wrapper-Skripte sowie die `known_hosts`-Datei automatisch.
 
-## Architektur-Komponenten
-
-| Komponente                            | Beschreibung                                                    |
-| ------------------------------------- | --------------------------------------------------------------- |
-| **Terraform Modul `ssh-known-hosts`** | Wiederverwendbares Submodul für SSH-Verbindungsmanagement       |
-| **Template-Dateien**                  | `ssh.sh` und `scp.sh` Wrapper-Skripte als Templates             |
-| **`locals` Block**                    | Entscheidet automatisch, ob Hostname oder IP verwendet wird     |
-| **Modul-Einbindung**                  | Das Hauptprojekt übergibt den Public Key und die Server-Adresse |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 17](/exercises/17-generating-host-meta-data) auf. Die Modulstruktur mit dem `modules` Ordner wurde dort bereits eingeführt.

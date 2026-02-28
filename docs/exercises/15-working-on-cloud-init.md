@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird die bestehende Server-Konfiguration schrittweise zu einer robusten Cloud-Init-basierten Lösung ausgebaut. Anstelle eines einfachen Shell-Scripts wird ein flexibles YAML-Template eingeführt, das über Terraform-Variablen gesteuert wird. Damit lassen sich Benutzerverwaltung, SSH-Sicherheit und Paketinstallation deklarativ und wiederholbar konfigurieren.
 
-## Architektur-Komponenten
-
-| Komponente                               | Beschreibung                                                            |
-| ---------------------------------------- | ----------------------------------------------------------------------- |
-| **Terraform Konfiguration**              | Definiert die Infrastruktur und rendert das Cloud-Init Template         |
-| **Cloud-Init Template (`userData.yml`)** | YAML-basierte Serverkonfiguration, die beim ersten Boot ausgeführt wird |
-| **`templatefile()` Funktion**            | Terraform-Funktion, die Variablen in das Template einsetzt              |
-| **Firewall**                             | Erweitert um SSH-Zugriff (Port 22) zusätzlich zu HTTP (Port 80)         |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 14](/exercises/14-cloud-init) auf. Der dort erstellte Server mit Nginx-Init-Script wird hier auf ein flexibles Cloud-Init Template umgestellt.

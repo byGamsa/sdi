@@ -9,14 +9,6 @@ Diese Übung erweitert die bereits in Aufgabe 28 erstellten Netzwerke um mehrere
 - Es soll ein Delay eingerichtet werden, sodass der interne Host erst startet, sobald der Proxy läuft.
 - Der interne Host soll das Gateway als Proxy benutzen und Pakete installieren sowie updaten.
 
-## Architektur-Komponenten
-
-| Komponente          | Beschreibung                                                 |
-| ------------------- | ------------------------------------------------------------ |
-| **Gateway**         | `hcloud_primary_ip`, `apt-cacher-ng` HTTP-Proxy              |
-| **Interner Host**   | Bezieht Pakete über Gateway-Proxy via `10.0.1.10:3142`       |
-| **Synchronisation** | `null_resource` (remote-exec) blockiert bis Proxy bereit ist |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 28](/exercises/28-creating-a-subnet) auf.

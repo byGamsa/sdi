@@ -4,14 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung geht es darum, mithilfe von Terraform ein SSL/TLS-Zertifikat von Let's Encrypt automatisiert signieren zu lassen und lokal abzuspeichern (für die Haupt-Domain und alle Sub-Domains). Dies ist eine Erweiterung zur Aufgabe 21, bei der das Zertifikat noch manuell über das CLI (Command Line Interface) direkt auf dem Server bezogen wurde.
 
-## Architektur-Komponenten
-
-| Komponente              | Beschreibung                                      |
-| ----------------------- | ------------------------------------------------- |
-| **Zertifizierung**      | ACME Provider (Let's Encrypt), RSA & ED25519 Keys |
-| **DNS**                 | DNS-Challenge mittels RFC2136                     |
-| **Netzwerk/Sicherheit** | Firewall Rules für HTTPS (Port 443)               |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 24](/exercises/24-creating-a-fixed-number-of-servers) auf.

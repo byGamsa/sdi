@@ -4,16 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird ein vollständiger Server mit passenden DNS-Einträgen erstellt und die SSH-Wrapper so angepasst, dass sie den DNS-Namen statt der IP-Adresse verwenden. Das macht die gesamte Konfiguration robuster.
 
-## Architektur-Komponenten
-
-| Komponente               | Beschreibung                                                   |
-| ------------------------ | -------------------------------------------------------------- |
-| **DNS Provider**         | Erstellt A-Records und CNAME-Aliase für den Server             |
-| **SSH-Wrapper mit DNS**  | `ssh.sh` und `scp.sh` verwenden DNS-Namen statt IP-Adressen    |
-| **Known Hosts mit FQDN** | `known_hosts`-File verwendet den FQDN statt der IP             |
-| **TLS Key**              | Generiert SSH Host Key für den Server                          |
-| **Dynamische Server-IP** | A-Records verwenden die tatsächliche IP des erstellten Servers |
-
 ## Codebasis
 
 Diese Aufgabe baut auf dem Code von [Aufgabe 16](/exercises/16-solving-the-known-hosts-quirk) (SSH Known Hosts) und [Aufgabe 22](/exercises/22-creating-dns-records) (DNS Records) auf. Der Code beider Aufgaben wird zusammengeführt.

@@ -4,15 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 Wenn Server bei Hetzner Cloud zerstört und neu erstellt werden, erhalten sie neue Host Keys. Das führt zur bekannten SSH-Warnung: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`. In dieser Übung lösen wir dieses Problem, indem wir eigene SSH Host Keys generieren, sie dem Server über Cloud-Init übergeben und Wrapper-Skripte erstellen, die ein separates `known_hosts`-File verwenden.
 
-## Architektur-Komponenten
-
-| Komponente                  | Beschreibung                                                                |
-| --------------------------- | --------------------------------------------------------------------------- |
-| **TLS Private Key**         | Von Terraform generierter ED25519 SSH Host Key                              |
-| **`gen/known_hosts`**       | Eigenes Known-Hosts-File mit dem generierten Public Key                     |
-| **`bin/ssh` und `bin/scp`** | Wrapper-Skripte, die das eigene Known-Hosts-File verwenden                  |
-| **Cloud-Init Template**     | Übergibt den Private Key an den Server, damit er den richtigen Host Key hat |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 15](/exercises/15-working-on-cloud-init) auf. Die dort erstellte Cloud-Init Konfiguration wird hier um den SSH Host Key erweitert.

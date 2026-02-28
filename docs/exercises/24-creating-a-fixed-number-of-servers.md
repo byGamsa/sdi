@@ -4,17 +4,6 @@ Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de
 
 In dieser Übung wird die bestehende Konfiguration dynamisch gemacht, sodass eine variable Anzahl an Servern über eine einzige Variable gesteuert wird. Jeder Server erhält seinen eigenen SSH Host Key, eigene Wrapper-Skripte (`bin/ssh`, `bin/scp`), eine individuelle `known_hosts`-Datei und einen eigenen DNS A-Record.
 
-## Architektur-Komponenten
-
-| Komponente                   | Beschreibung                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------- |
-| **`count` Meta-Argument**    | Erstellt mehrere Instanzen jeder Ressource basierend auf `serverCount`        |
-| **Dynamische Namensvergabe** | Server werden durchnummeriert (`work-1`, `work-2`, ...)                       |
-| **Individuelle SSH-Keys**    | Jeder Server erhält ein eigenes ED25519-Schlüsselpaar                         |
-| **Individuelle Skripte**     | Pro Server ein eigenes `bin/ssh` und `gen/known_hosts` im eigenen Unterordner |
-| **DNS A-Records**            | Jeder Server bekommt einen eigenen A-Record                                   |
-| **Splat-Expression `[*]`**   | Gibt die Attribute aller Instanzen als Liste aus                              |
-
 ## Codebasis
 
 Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 23](/exercises/23-creating-host-with-corresponding-dns-entries) auf. Der dort erstellte Code wird so erweitert, dass er mit einer variablen Anzahl an Servern funktioniert.
