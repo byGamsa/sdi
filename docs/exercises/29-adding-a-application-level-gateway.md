@@ -1,13 +1,27 @@
-# 29. Adding a application level gateway
+# 29. Application-Level Gateway hinzufügen
 
-Diese Aufgabe ist aufbauend auf Aufgabe 28
+Originale Aufgabenstellung: [Lecture Notes](https://freedocs.mi.hdm-stuttgart.de/sdi_cloudProvider_networks.html#sdi_cloudProvider_networks_qanda_httpGateway)
 
-Diese Aufgabe soll die bereits in Aufgabe 28 erstellten Netzwerke um mehrere Punkte erweitern.
+Diese Übung erweitert die bereits in Aufgabe 28 erstellten Netzwerke um mehrere Punkte:
 
-- Es soll eine `hcloud_primary_ip` für das Gateway erstellt werden
-- Auf dem Gateway soll ein HTTP-Proxy installiert und konfiguriert werden
-- Es soll ein Delay eingerichtet werden, sodass der interne Host erst startet, sobald der Proxy läuft
-- Der interne Host soll das Gateway als Proxy benutzen und Packages installieren und updaten.
+- Es soll eine `hcloud_primary_ip` für das Gateway erstellt werden.
+- Auf dem Gateway soll ein HTTP-Proxy installiert und konfiguriert werden.
+- Es soll ein Delay eingerichtet werden, sodass der interne Host erst startet, sobald der Proxy läuft.
+- Der interne Host soll das Gateway als Proxy benutzen und Pakete installieren sowie updaten.
+
+## Architektur-Komponenten
+
+| Komponente          | Beschreibung                                                 |
+| ------------------- | ------------------------------------------------------------ |
+| **Gateway**         | `hcloud_primary_ip`, `apt-cacher-ng` HTTP-Proxy              |
+| **Interner Host**   | Bezieht Pakete über Gateway-Proxy via `10.0.1.10:3142`       |
+| **Synchronisation** | `null_resource` (remote-exec) blockiert bis Proxy bereit ist |
+
+## Codebasis
+
+Diese Aufgabe baut auf der Infrastruktur aus [Aufgabe 28](/exercises/28-creating-a-subnet) auf.
+
+## Übungsschritte
 
 ## Erstellen einer `hcloud_primary_ip` für das Gateway
 
