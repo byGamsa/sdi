@@ -379,7 +379,7 @@ write_files:
 runcmd:
   # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
   - systemctl restart ssh
-  - systemctl enable nginx  #// [!code --:2]
+  - systemctl enable nginx #// [!code --:2]
   - systemctl restart nginx
 
 users:
