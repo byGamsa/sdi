@@ -354,7 +354,7 @@ Als zusätzliche Maßnahme ist es sinnvoll, einen `depends_on`- Block an beide S
 
 ```yml [tpl/userData.yml]
 #cloud-config
-package_update: true // [!code --:2]
+package_update: true #// [!code --:2]
 package_upgrade: true
 
 packages: // [!code --:2]
@@ -379,7 +379,7 @@ write_files:
 runcmd:
   # Host Key wurde geschrieben -> SSH neu starten, damit er aktiv wird
   - systemctl restart ssh
-  - systemctl enable nginx
+  - systemctl enable nginx  #// [!code --:2]
   - systemctl restart nginx
 
 users:

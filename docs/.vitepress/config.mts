@@ -48,6 +48,7 @@ export default defineConfig({
               link: '/exercises/27-combining-certificate-generation-and-server-creation',
             },
             { text: 'Exercise 28', link: '/exercises/28-creating-a-subnet' },
+            { text: 'Exercise 29', link: '/exercises/29-adding-a-application-level-gateway' },
           ],
         },
       ],

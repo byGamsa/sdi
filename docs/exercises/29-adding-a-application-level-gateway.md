@@ -11,7 +11,7 @@ Diese Aufgabe soll die bereits in Aufgabe 28 erstellten Netzwerke um mehrere Pun
 #### Erstellen einer ``hcloud_primary_ip`` für das Gateway
 Als ersten Schritt erstellen wir eine ``hcloud_primary_ip`` und verknüpfen sie mit unserem Gateway-Host. Dabei muss darauf geachtet werden, dass die IP-Adresse und der Server im gleichen Netzwerk liegen. Aus diesem Grund legen wir zusätzlich eine neue Variable für die Location fest und ordnen sowohl der ``hcloud_primary_ip`` als auch dem Gateway zu.
 
-::: code-block
+::: code-group
 ```hcl [main.tf]
 resource "hcloud_primary_ip" "gateway_ip" { // [!code ++:7]
   name          = "gateway-ip"
@@ -40,7 +40,7 @@ resource "hcloud_server" "gateway" {
 }
 ```
 ```hcl [variable.tf]
-variable "loginUser" { // [!code ++:5]
+variable "loginUser" { // [!code ++:6]
   description = "Standort des Rechenzentrums"
   type = string
   sensitive = true
@@ -55,7 +55,7 @@ In diesem Schritt muss unsere ``tpl/userData.yml`` in zwei separate Dateien aufg
 
 Zuerst wird die Datei ``tpl/userData.yml`` dupliziert und in ``tpl/gateway.yml`` und ``tpl/intern.yml`` umbenannt. Die Anpassung muss dementsprechend auch in der ``main.tf`` erfolgen. Anschließend passen wir die ``tpl/gateway.yml`` Datei an, indem `apt-cacher-ng` installiert und konfiguriert wird. Die ``tpl/intern.yml`` kann vorerst gleich bleiben.
 
-::: code-block
+::: code-group
 ```hcl [main.tf]
 resource "hcloud_server" "gateway" {
   name = "gateway"
@@ -90,7 +90,7 @@ resource "hcloud_server" "intern" {
   }
 }
 
-resource "local_file" "gateway_data" { // [!code ++:8]
+resource "local_file" "gateway_data" { // [!code ++:9]
   content = templatefile("tpl/gateway.yml", {
     tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh)
     loginUser = var.loginUser
@@ -100,7 +100,7 @@ resource "local_file" "gateway_data" { // [!code ++:8]
   filename = "gen/gateway.yml"
 }
 
-resource "local_file" "intern_data" { // [!code ++:8]
+resource "local_file" "intern_data" { // [!code ++:9]
   content = templatefile("tpl/intern.yml", {
     tls_private_key = indent(4, tls_private_key.host_key.private_key_openssh)
     loginUser = var.loginUser
@@ -169,7 +169,7 @@ ssh-add -l # prüfen, ob alles richtig funktioniert
 ::: code-group
 ```bash [tpl/waitForAptProxy.sh]
 #!/bin/bash
-echo "Waiting for apt-cacher-ng on ${interface}:3142 ..." // [!code ++:6]
+echo "Waiting for apt-cacher-ng on ${interface}:3142 ..." #// [!code ++:7]
 while ! nc -z ${interface} 3142; do
   sleep 8
   echo "apt-cacher-ng not yet ready ..."
@@ -178,7 +178,7 @@ done
 echo "apt-cacher-ng service ready"
 ```
 ```hcl [main.tf]
-resource "local_file" "waitForAptProxy" { // [!code ++:21]
+resource "local_file" "waitForAptProxy" { // [!code ++:22]
   content = templatefile("tpl/waitForAptProxy.sh", {
     interface = "10.0.1.10"
   })
@@ -230,7 +230,7 @@ In dieser Aufgabe müssen wir die ``tpl/intern.yml`` anpassen. Es müssen Packet
 ::: code-group
 ```yml [tpl/intern.yml]
 #cloud-config
-package_update: true // [!code ++:2]
+package_update: true #// [!code ++:2]
 package_upgrade: true
 
 apt: // [!code ++:2]
