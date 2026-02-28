@@ -75,5 +75,5 @@ sudo systemctl status nginx
 
 Wenn alles erfolgreich geklappt hat, zeigt der Browser immer noch eine Warnmeldung an. Wenn man sich Details des Zertifikats anschaut, sieht man, dass es sich um das Staging-Zertifikat von Let's Encrypt handelt. Anschließend kann alles neu ausgeführt werden mit der Produktions-URL `https://acme-v02.api.letsencrypt.org/directory` von Let's Encrpyt. Bei erfolgreichem Ausführen sollte der Browser keine Fehlermeldung mehr anzeigen.
 ::: warning
-Hier darf nicht vergessen werden, nach erfolgreichem Ausführen des Codes mit der Produktions-URL, wieder aus die Staging-URL zu wechsel!
+Hier darf nicht vergessen werden, nach erfolgreichem Ausführen des Codes mit der Produktions-URL, wieder auf die Staging-URL zu wechseln!
 :::
