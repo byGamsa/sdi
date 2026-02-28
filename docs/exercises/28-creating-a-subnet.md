@@ -146,8 +146,8 @@ variable "loginUser" {
 Zuerst erweitern wir unsere main.tf, um ein privates Netzwerk (10.0.0.0/8) und ein Subnetz (10.0.1.0/24) zu erstellen.
 ::: code-group
 
-```hcl [main.tf] // [!code ++:10]
-resource "hcloud_network" "privateNet" {
+```hcl [main.tf] 
+resource "hcloud_network" "privateNet" { // [!code ++:11]
   name     = "Private Network"
   ip_range = "10.0.0.0/8"
 }
@@ -167,7 +167,7 @@ resource "hcloud_network_subnet" "privateSubnet" {
 ::: code-group
 
 ```hcl [main.tf]
-resource "hcloud_server" "gateway" { // [!code ++:15]
+resource "hcloud_server" "gateway" { // [!code ++:16]
   name = "gateway"
   image        =  "debian-13"
   server_type  =  "cx23"
@@ -194,7 +194,7 @@ Hier muss darauf geachtet werden, dass `ipv4_enabled` und `ipv6_enabled` beide a
 ::: code-group
 
 ```hcl [main.tf]
-resource "hcloud_server" "intern" { // [!code ++:14]
+resource "hcloud_server" "intern" { // [!code ++:15]
   name = "intern"
   image        =  "debian-13"
   server_type  =  "cx23"
@@ -234,7 +234,7 @@ ssh_keys:
   ed25519_private: |
     ${tls_private_key}
 
-write_files: // [!code ++:7]
+write_files: // [!code ++:8]
   - path: /etc/cloud/templates/hosts.debian.tmpl
     content: |
       127.0.1.1 {{fqdn}} {{hostname}}
@@ -264,7 +264,7 @@ Zuletzt können wir für die bessere Typisierung unser privates Subnetz als Vari
 ::: code-group
 
 ```hcl [variable.tf]
-variable "privateSubnet" { // [!code ++:9]
+variable "privateSubnet" { // [!code ++:10]
   type = object({
     dnsDomainName = string
     ipAndNetmask  = string
@@ -451,7 +451,7 @@ resource "local_file" "known_hosts" {
 resource "local_file" "ssh_script" {
   content = templatefile("${path.module}/tpl/ssh.sh", {
     devopsUsername = var.loginUser,
-    ip = hcloud_server.gateway.ipv4_address [!code ++]
+    ip = hcloud_server.gateway.ipv4_address //[!code ++]
   })
   filename        = "bin/ssh"
   file_permission = "755"
@@ -472,7 +472,7 @@ resource "local_file" "scp_script" {
 
 GEN_DIR=$(dirname "$0")/../gen
 
-ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${devopsUsername}@${ip} "$@"  // [!code ++]
+ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${devopsUsername}@${ip} "$@"  #// [!code ++]
 ```
 
 ```bash [scp.sh]
@@ -481,7 +481,7 @@ ssh -o UserKnownHostsFile="$GEN_DIR/known_hosts" ${devopsUsername}@${ip} "$@"  /
 GEN_DIR=$(dirname "$0")/../gen
 
 if [ $# -lt 2 ]; then
-   echo usage: .../bin/scp ${devopsUsername}@${ip} ... // [!code ++]
+   echo usage: .../bin/scp ${devopsUsername}@${ip} ... #// [!code ++]
 else
    scp -o UserKnownHostsFile="$GEN_DIR/known_hosts" $@
 fi
